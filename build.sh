@@ -9,8 +9,10 @@
 #   sudo ./build.sh                 # Build in /pikvm (default)
 #   sudo BUILD_IN_TMP=1 ./build.sh  # Build in /tmp/pikvm (auto-cleanup on reboot)
 #
-# The script handles all permission issues automatically to ensure
-# Docker can access files properly during the build process.
+# The script handles all permission issues automatically by:
+# - Running as sudo to copy files to /pikvm
+# - Preserving the actual user's UID/GID (not root)
+# - Running make commands as the actual user to avoid Docker permission issues
 #
 
 set -e  # Exit on any error
@@ -48,9 +50,28 @@ BUILD_START=$(date +%s)
 if [ "$EUID" -ne 0 ]; then 
     echo -e "${YELLOW}Warning: Not running as root. Will use sudo for copying to /${NC}"
     SUDO="sudo"
+    REAL_USER=$(id -u)
+    REAL_GROUP=$(id -g)
+    REAL_USERNAME=$(id -un)
+    REAL_HOME=$HOME
 else
     SUDO=""
+    # If running with sudo, get the actual user who invoked sudo
+    if [ -n "$SUDO_UID" ]; then
+        REAL_USER=$SUDO_UID
+        REAL_GROUP=$SUDO_GID
+        REAL_USERNAME=$SUDO_USER
+        REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
+    else
+        # Running as actual root (not via sudo)
+        echo -e "${RED}Error: Please run this script as a normal user with sudo, not as root${NC}"
+        echo "Usage: sudo ./build.sh"
+        exit 1
+    fi
 fi
+
+echo "Building as user: $REAL_USERNAME (UID:$REAL_USER, GID:$REAL_GROUP)"
+echo "Home directory: ${REAL_HOME:-/home/$REAL_USERNAME}"
 
 # Step 1: Copy entire pikvm directory to /pikvm
 echo -e "${GREEN}Step 1: Copying pikvm directory to $DEST_DIR${NC}"
@@ -59,8 +80,8 @@ $SUDO mkdir -p "$DEST_DIR"
 $SUDO cp -a "$PIKVM_SOURCE_DIR"/* "$DEST_DIR/"
 
 # Ensure proper ownership and permissions
-echo "Setting ownership to $(id -un):$(id -gn)..."
-$SUDO chown -R $(id -u):$(id -g) "$DEST_DIR"
+echo "Setting ownership to $REAL_USERNAME..."
+$SUDO chown -R $REAL_USER:$REAL_GROUP "$DEST_DIR"
 
 echo "Setting directory permissions to 755..."
 $SUDO find "$DEST_DIR" -type d -exec chmod 755 {} \;
@@ -74,10 +95,10 @@ $SUDO find "$DEST_DIR" -type f \( -name "*.sh" -o -name "buildpkg" \) -exec chmo
 # Verify permissions
 echo "Verifying permissions..."
 OWNER_CHECK=$(stat -c '%U' "$DEST_DIR")
-if [ "$OWNER_CHECK" != "$(id -un)" ]; then
-    echo -e "${RED}Warning: Directory owner is $OWNER_CHECK, expected $(id -un)${NC}"
+if [ "$OWNER_CHECK" != "$REAL_USERNAME" ]; then
+    echo -e "${RED}Warning: Directory owner is $OWNER_CHECK, expected $REAL_USERNAME${NC}"
     echo -e "${YELLOW}Attempting to fix...${NC}"
-    $SUDO chown -R $(id -u):$(id -g) "$DEST_DIR"
+    $SUDO chown -R $REAL_USER:$REAL_GROUP "$DEST_DIR"
 fi
 
 # Verify we can write to the directory
@@ -92,12 +113,23 @@ echo -e "${GREEN}Permissions verified successfully${NC}"
 echo ""
 echo -e "${GREEN}Step 2: Building OS (make os)${NC}"
 cd "$DEST_DIR/os"
-make os
+
+# Run make as the actual user (not root) to avoid permission issues with Docker
+if [ "$EUID" -eq 0 ]; then
+    echo "Running make as $REAL_USERNAME..."
+    sudo -u "$REAL_USERNAME" -E HOME="${REAL_HOME:-/home/$REAL_USERNAME}" make os
+else
+    make os
+fi
 
 # Step 3: Create image
 echo ""
 echo -e "${GREEN}Step 3: Creating image (make image)${NC}"
-make image
+if [ "$EUID" -eq 0 ]; then
+    sudo -u "$REAL_USERNAME" -E HOME="${REAL_HOME:-/home/$REAL_USERNAME}" make image
+else
+    make image
+fi
 
 # Step 4: Copy images back
 echo ""

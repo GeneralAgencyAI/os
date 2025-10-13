@@ -45,7 +45,7 @@ fi
 
 echo ""
 echo "3. Checking package sources..."
-PACKAGES_REPO="${LOCAL_PACKAGES_REPO:-/mnt/e/GitHub/Symmetric/pikvm/packages}"
+PACKAGES_REPO="${LOCAL_PACKAGES_REPO:-/pikvm/packages}"
 if [ -d "$PACKAGES_REPO/repos/rpi4-aarch64" ]; then
     echo "   ✅ Local package repository found"
     echo "   Location: $PACKAGES_REPO/repos/rpi4-aarch64"
@@ -65,7 +65,7 @@ fi
 
 echo ""
 echo "4. Checking for build markers..."
-KVMD_SRC="${LOCAL_KVMD_REPO:-/mnt/e/GitHub/Symmetric/pikvm/kvmd}"
+KVMD_SRC="${LOCAL_KVMD_REPO:-/pikvm/kvmd}"
 if [ -d "$KVMD_SRC/.git" ]; then
     echo "   ✅ Local kvmd repository is a git repo"
     echo "   📍 Current commit: $(git -C "$KVMD_SRC" log -1 --oneline 2>/dev/null || echo 'unknown')"

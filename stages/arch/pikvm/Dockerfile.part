@@ -12,6 +12,7 @@ ENV FAN=$FAN
 
 RUN echo $PLATFORM $VERSIONS
 
+# Install official packages from files.pikvm.org
 RUN pacman --noconfirm --ask=4 -Syu \
 	&& pacman --noconfirm --ask=4 -S pikvm-os-raspberrypi \
 	&& (mv /boot/config.txt.pacsave /boot/config.txt || true) \
@@ -32,6 +33,17 @@ RUN pkg-install --assume-installed tessdata \
 		avahi \
 		hostapd \
 	&& if [[ $PLATFORM =~ ^v4.*$ ]]; then pkg-install flashrom-pikvm; fi
+
+# Replace official kvmd with locally-built version
+COPY local-kvmd /tmp/local-kvmd
+RUN echo "==> Installing locally-built kvmd package" \
+	&& if ls /tmp/local-kvmd/kvmd-[0-9]*.pkg.tar.xz 1> /dev/null 2>&1; then \
+		pacman -U --noconfirm /tmp/local-kvmd/kvmd-[0-9]*.pkg.tar.xz \
+		&& echo "==> Successfully installed local kvmd package" \
+		&& rm -rf /tmp/local-kvmd \
+	; else \
+		echo "WARNING: No local kvmd package found, using official version" \
+	; fi
 
 ENV PART_OPTS=nodev,nosuid,noexec,ro,errors=remount-ro
 RUN echo "LABEL=PIPST  /var/lib/kvmd/pst  ext4  $PART_OPTS,X-kvmd.pst-user=kvmd-pst  0 2" >> /etc/fstab

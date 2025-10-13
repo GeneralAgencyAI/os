@@ -1,0 +1,1016 @@
+===== Building kvmd package from local source =====
+make -C /mnt/e/GitHub/Symmetric/pikvm/packages buildenv BOARD=rpi4 ARCH=arm PROJECT=pikvm-packages STAGES="__init__ buildenv"
+make[1]: Entering directory '/mnt/e/GitHub/Symmetric/pikvm/packages'
+make -C ./.pi-builder/rpi4-arm binfmt
+make[2]: Entering directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm'
+[1m[32m===== Ensuring toolbox image =====
+(B[mmake -C toolbox toolbox
+make[3]: Entering directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm/toolbox'
+rm -f *.tgz Dockerfile
+if grep -q '^ADD %BASE_ROOTFS_TGZ%' Dockerfile.x86_64; then ln ../base/arch-rpi4-arm.tgz . ; fi
+sed -e 's|%BASE_ROOTFS_TGZ%|arch-rpi4-arm.tgz|g' Dockerfile.x86_64 > Dockerfile
+cat Dockerfile.common >> Dockerfile
+docker build \
+		--rm \
+		--tag pi-builder.pikvm-packages.toolbox \
+		--build-arg "ARCH_DIST_REPO_URL=http://ca.us.mirror.archlinuxarm.org" \
+		 \
+	.
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 677B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/archlinux/archlinux:base
+#2 DONE 0.2s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B 0.0s done
+#3 DONE 0.0s
+
+#4 [1/9] FROM docker.io/archlinux/archlinux:base@sha256:1089c3fc76dc1e000861b36ad597c10ade08337679354f6c84ca72168a3ddabb
+#4 resolve docker.io/archlinux/archlinux:base@sha256:1089c3fc76dc1e000861b36ad597c10ade08337679354f6c84ca72168a3ddabb 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 26.56kB 0.0s done
+#5 DONE 0.0s
+
+#6 [8/9] COPY disk /tools/
+#6 CACHED
+
+#7 [4/9] RUN pacman --noconfirm --ask=4 -Syu 	&& pacman --needed --noconfirm --ask=4 -S 		openssl 		openssl-1.1 		p11-kit 		archlinux-keyring 		ca-certificates 		ca-certificates-mozilla 		ca-certificates-utils 		arp-scan 		python 		python-dask 		parted 		dosfstools 		rsync 		xz 	&& rm -rf /var/cache/pacman/pkg/*
+#7 CACHED
+
+#8 [2/9] RUN mkdir -p /etc/pacman.d/hooks 	&& ln -s /dev/null /etc/pacman.d/hooks/30-systemd-tmpfiles.hook
+#8 CACHED
+
+#9 [3/9] RUN sed -i -e "s/^CheckSpace/#!!!CheckSpace/g" /etc/pacman.conf
+#9 CACHED
+
+#10 [5/9] RUN mkdir /tools
+#10 CACHED
+
+#11 [6/9] COPY binfmt /tools/
+#11 CACHED
+
+#12 [7/9] COPY docker-extract /tools/
+#12 CACHED
+
+#13 [9/9] COPY install /tools/
+#13 CACHED
+
+#14 exporting to image
+#14 exporting layers done
+#14 exporting manifest sha256:80e23084870d879eb016031fb9c88d1b28dbfe89a48c88049f6efafd539d4179 done
+#14 exporting config sha256:5d5dadc963c67e65e59d69fc52c2b204e9471d021210cbc17c781d74f9fc90fe done
+#14 exporting attestation manifest sha256:4c81634267a42f6970b9cef3e045a75bce0f51210e8f2e0f1fed95457c99399a
+#14 exporting attestation manifest sha256:4c81634267a42f6970b9cef3e045a75bce0f51210e8f2e0f1fed95457c99399a 0.0s done
+#14 exporting manifest list sha256:525dcef300ee00ff4ad4611581080b0fa333eb9558aa0f1b254bfea867899dd9 0.0s done
+#14 naming to docker.io/library/pi-builder.pikvm-packages.toolbox:latest done
+#14 unpacking to docker.io/library/pi-builder.pikvm-packages.toolbox:latest 0.0s done
+#14 DONE 0.1s
+make[3]: Leaving directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm/toolbox'
+[1m[32m===== Toolbox image is ready =====
+(B[m[1m[32m===== Ensuring arm binfmt =====
+(B[mdocker run --rm --tty \
+		--privileged \
+	pi-builder.pikvm-packages.toolbox \
+		/tools/binfmt --mount arm /usr/bin/qemu-arm-static
+:: Mounting binfmt_misc to '/proc/sys/fs/binfmt_misc' ...
+:: Checking ARM binfmt configuration ...
+:: Found existent ARM binfmt handler
+:: ARM binfmt handler '/usr/bin/qemu-arm-static' is ready
+[1m[32m===== Binfmt arm is ready =====
+(B[mmake[2]: Leaving directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm'
+[1m[32m===== Ensuring rpi4-arm buildenv =====
+(B[mrm -rf ./.pi-builder/rpi4-arm/stages/arch/buildenv
+cp -a buildenv ./.pi-builder/rpi4-arm/stages/arch/buildenv
+make -C ./.pi-builder/rpi4-arm os \
+	PASS_ENSURE_TOOLBOX=1 \
+	PASS_ENSURE_BINFMT=1 \
+	TAG=pikvm-packages.rpi4-arm.1000-1000 \
+	BUILD_OPTS=" \
+		--build-arg TARGET_REPO_NAME=pikvm \
+		--build-arg TARGET_REPO_KEY=912C773ABBD1B584 \
+		--build-arg ALARM_UID=1000 \
+		--build-arg ALARM_GID=1000 \
+		--build-arg ARCH_PIKVM_REPO_URL=https://files.pikvm.org/repos/arch/ \
+	"
+make[2]: Entering directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm'
+rm -f ./pikvm-packages.arch-rpi4-arm.img ./pikvm-packages.arch-rpi4-arm.img.sha1 ./pikvm-packages.arch-rpi4-arm.img.xz ./pikvm-packages.arch-rpi4-arm.img.xz.sha1
+test ! -d ./.cache || docker run --rm --tty --volume=/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm:/root/dir --workdir=/root/dir pi-builder.pikvm-packages.toolbox rm -rf .cache
+rm -f ./.built.conf
+rm -rf ./.build
+[1m[32m===== Ensuring base rootfs =====
+(B[mmake -C base arch-rpi4-arm.tgz
+make[3]: Entering directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm/base'
+make[3]: 'arch-rpi4-arm.tgz' is up to date.
+make[3]: Leaving directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm/base'
+[1m[32m===== Base rootfs is ready =====
+(B[m[1m[32m===== Ensuring QEMU-arm =====
+(B[mmake -C qemu qemu-arm
+make[3]: Entering directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm/qemu'
+make[3]: Nothing to be done for 'qemu-arm'.
+make[3]: Leaving directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm/qemu'
+[1m[32m===== QEMU-arm is ready =====
+(B[m[1m[32m===== Assembling main Dockerfile =====
+(B[m#
+mkdir -p ./.build
+ln base/arch-rpi4-arm.tgz ./.build
+test arm = x86_64 \
+	|| ln qemu/qemu-arm-static* ./.build
+#
+cp -a stages/common ./.build/stages
+cp -a stages/arch/* ./.build/stages
+sed -i -e 's|%ADD_BASE_ROOTFS_TGZ%|ADD arch-rpi4-arm.tgz /|g' ./.build/stages/__init__/Dockerfile.part
+test arm != x86_64 \
+	&& sed -i -e 's|%COPY_QEMU_USER_STATIC%|COPY qemu-arm-static* /usr/bin/|g' ./.build/stages/__init__/Dockerfile.part \
+	|| sed -i -e 's|%COPY_QEMU_USER_STATIC%||g' ./.build/stages/__init__/Dockerfile.part
+for var in OS BOARD ARCH LOCALE TIMEZONE ARCH_DIST_REPO_URL ARCH_PIKVM_REPO_URL ARCH_PIKVM_REPO_KEY; do \
+	echo "ARG $var" >> ./.build/stages/__init__/Dockerfile.part \
+	&& echo "ENV $var=\$$var" >> ./.build/stages/__init__/Dockerfile.part \
+; done
+#
+echo -n > ./.build/Dockerfile
+for stage in __init__ buildenv; do \
+	cat ./.build/stages/$stage/Dockerfile.part >> ./.build/Dockerfile \
+; done
+#
+test -n "./.build"
+echo "Signature: 8a477f597d28d172789f06886806bc55" > "./.build/CACHEDIR.TAG"
+[1m[32m===== Main Dockerfile is ready =====
+(B[m[1m[32m===== Building OS =====
+(B[mcd ./.build && docker build \
+		--rm \
+		--tag=pi-builder.pikvm-packages.arch-rpi4-arm-result \
+		--tag=pikvm-packages.rpi4-arm.1000-1000 \
+		 \
+		--build-arg "OS=arch" \
+		--build-arg "BOARD=rpi4" \
+		--build-arg "ARCH=arm" \
+		--build-arg "LOCALE=en_US" \
+		--build-arg "TIMEZONE=Europe/Nicosia" \
+		--build-arg "ARCH_DIST_REPO_URL=http://ca.us.mirror.archlinuxarm.org" \
+		--build-arg "ARCH_PIKVM_REPO_URL=https://files.pikvm.org/repos/arch/" \
+		--build-arg "ARCH_PIKVM_REPO_KEY=912C773ABBD1B584" \
+		--build-arg "REBUILD=242b808b-b953-4ad7-a056-a9baf1f5979a" \
+		--build-arg TARGET_REPO_NAME=pikvm 		--build-arg TARGET_REPO_KEY=912C773ABBD1B584 		--build-arg ALARM_UID=1000 		--build-arg ALARM_GID=1000 		--build-arg ARCH_PIKVM_REPO_URL=https://files.pikvm.org/repos/arch/ 	 \
+	.
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 3.98kB 0.0s done
+#1 WARN: SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "ARCH_PIKVM_REPO_KEY") (line 21)
+#1 WARN: SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "ARCH_PIKVM_REPO_KEY") (line 22)
+#1 WARN: SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "TARGET_REPO_KEY") (line 65)
+#1 WARN: SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "TARGET_REPO_KEY") (line 66)
+#1 DONE 0.0s
+
+#2 [internal] load .dockerignore
+#2 transferring context: 2B 0.0s done
+#2 DONE 0.0s
+
+#3 [internal] load build context
+#3 transferring context: 225B 0.3s done
+#3 DONE 0.3s
+
+#4 [ 6/18] RUN echo "HOOKS=(base udev block filesystems)" >> /etc/mkinitcpio.conf
+#4 CACHED
+
+#5 [14/18] RUN userdel -r -f alarm 	&& (g=$(getent group 1000 | cut -d: -f1); [ -z "$g" ] || groupdel "$g") 	&& (u=$(getent passwd 1000 | cut -d: -f1); [ -z "$u" ] || userdel "$u") 	&& groupadd -g 1000 alarm 	&& useradd -u 1000 -g 1000 -m alarm 	&& mkdir -p /run/user/1000 	&& chown alarm:alarm /run/user/1000
+#5 CACHED
+
+#6 [16/18] RUN mkdir -p /etc/gnupg 	&& echo '[ignore]' > /etc/gnupg/common.conf 	&& echo 'use-keyboxd' >> /etc/gnupg/common.conf 	&& echo '[-ignore]' >> /etc/gnupg/common.conf
+#6 CACHED
+
+#7 [10/18] RUN echo pikvm
+#7 CACHED
+
+#8 [17/18] RUN mkdir /tools
+#8 CACHED
+
+#9 [ 1/18] ADD arch-rpi4-arm.tgz /
+#9 CACHED
+
+#10 [ 3/18] RUN mkdir -p /etc/pacman.d/hooks 	&& ln -s /dev/null /etc/pacman.d/hooks/30-systemd-tmpfiles.hook
+#10 CACHED
+
+#11 [ 7/18] RUN sed -i -e "s/^CheckSpace/#CheckSpace/g" /etc/pacman.conf
+#11 CACHED
+
+#12 [ 4/18] RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen 	&& ([ "en_US" == "en_US" ] || echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen) 	&& locale-gen
+#12 CACHED
+
+#13 [ 9/18] RUN pacman --noconfirm --ask=4 -Syu 	&& pacman --needed --noconfirm --ask=4 -S 		openssl 		openssl-1.1 		p11-kit 		archlinux-keyring 		ca-certificates 		ca-certificates-mozilla 		ca-certificates-utils 		base 		base-devel 		devtools 		bc 		inetutils 		vim 		wget 		python 		distcc 		jq 	&& (pacman --noconfirm -Sc || true)
+#13 CACHED
+
+#14 [ 8/18] RUN echo "Server = http://ca.us.mirror.archlinuxarm.org/$arch/$repo" > /etc/pacman.d/mirrorlist 	&& pacman-key --init 	&& pacman-key --populate archlinuxarm
+#14 CACHED
+
+#15 [ 5/18] RUN rm -f /etc/localtime 	&& ln -s "/usr/share/zoneinfo/Europe/Nicosia" /etc/localtime
+#15 CACHED
+
+#16 [ 2/18] COPY qemu-arm-static* /usr/bin/
+#16 CACHED
+
+#17 [13/18] RUN ( 		pacman-key --keyserver hkps://keyserver.ubuntu.com:443 -r 647F28654894E3BD457199BE38DBBDC86092693E 		|| pacman-key --keyserver hkps://keys.gnupg.net:443 -r 647F28654894E3BD457199BE38DBBDC86092693E 		|| true 	) 	&& ( 		pacman-key --keyserver hkps://keyserver.ubuntu.com:443 -r ABAF11C65A2970B130ABE3C479BE3E4300411886 		|| pacman-key --keyserver hkps://keys.gnupg.net:443 -r ABAF11C65A2970B130ABE3C479BE3E4300411886 		|| true 	) 	&& (pacman-key --lsign-key 647F28654894E3BD457199BE38DBBDC86092693E 2>/dev/null || true) 	&& (pacman-key --lsign-key ABAF11C65A2970B130ABE3C479BE3E4300411886 2>/dev/null || true)
+#17 CACHED
+
+#18 [11/18] RUN ( 		pacman-key --keyserver hkps://keyserver.ubuntu.com:443 -r 912C773ABBD1B584 		|| pacman-key --keyserver hkps://keys.gnupg.net:443 -r 912C773ABBD1B584 		|| pacman-key --keyserver hkps://pgp.mit.edu:443 -r 912C773ABBD1B584 	) 	&& pacman-key --lsign-key 912C773ABBD1B584
+#18 CACHED
+
+#19 [12/18] RUN echo "" >> /etc/pacman.conf 	&& echo "[pikvm]" >> /etc/pacman.conf 	&& echo "Server = https://files.pikvm.org/repos/arch/rpi4-arm" >> /etc/pacman.conf 	&& echo "SigLevel = Optional TrustAll" >> /etc/pacman.conf 	&& pacman -Sy
+#19 CACHED
+
+#20 [15/18] RUN test arm != arm || sed -i 		-e 's/-Wl,-z,pack-relative-relocs//g' 		-e 's/-fno-omit-frame-pointer//g' 		-e 's/-mno-omit-leaf-frame-pointer//g' 	/etc/makepkg.conf
+#20 CACHED
+
+#21 [18/18] COPY stages/buildenv/buildpkg /tools/
+#21 CACHED
+
+#22 exporting to image
+#22 exporting layers done
+#22 exporting manifest sha256:46d049bb4a08c06b2d9420ac41a6ec0c9ed1f6d4b561d3be176c383de735d579 done
+#22 exporting config sha256:ace4f861ec07fdd648e4a9276115a879b5614a579b00a9b5e30357f442b3344c done
+#22 exporting attestation manifest sha256:b575c1cd98fcd3cb334453ec59abc059fd7c2abe4cecf34fbbf000c93bf62a24 0.0s done
+#22 exporting manifest list sha256:e6f70e122c7b98f29431d149ab0b43c8a7d9d7b31a92aa3cbffd70f9edec900f 0.0s done
+#22 naming to docker.io/library/pi-builder.pikvm-packages.arch-rpi4-arm-result:latest done
+#22 unpacking to docker.io/library/pi-builder.pikvm-packages.arch-rpi4-arm-result:latest 0.0s done
+#22 naming to docker.io/library/pikvm-packages.rpi4-arm.1000-1000:latest done
+#22 unpacking to docker.io/library/pikvm-packages.rpi4-arm.1000-1000:latest
+#22 unpacking to docker.io/library/pikvm-packages.rpi4-arm.1000-1000:latest 0.0s done
+#22 DONE 0.2s
+
+ [33m4 warnings found (use docker --debug to expand):
+[0m - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "ARCH_PIKVM_REPO_KEY") (line 21)
+ - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "ARCH_PIKVM_REPO_KEY") (line 22)
+ - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "TARGET_REPO_KEY") (line 65)
+ - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "TARGET_REPO_KEY") (line 66)
+echo "IMAGE=pi-builder.pikvm-packages.arch-rpi4-arm-result" > ./.built.conf
+echo "HOSTNAME=buildenv" >> ./.built.conf
+[1m[32m===== Running configuration =====
+(B[m    PROJECT    = pikvm-packages
+    OS         = arch
+    BOARD      = rpi4
+    ARCH       = arm
+    STAGES     = __init__ buildenv
+    BUILD_OPTS = --build-arg TARGET_REPO_NAME=pikvm 		--build-arg TARGET_REPO_KEY=912C773ABBD1B584 		--build-arg ALARM_UID=1000 		--build-arg ALARM_GID=1000 		--build-arg ARCH_PIKVM_REPO_URL=https://files.pikvm.org/repos/arch/ 	
+
+    HOSTNAME   = buildenv
+    LOCALE     = en_US
+    TIMEZONE   = Europe/Nicosia
+
+    CARD       = /dev/null
+    IMAGE      = ./pikvm-packages.arch-rpi4-arm.img
+    IMAGE_XZ   = 
+[1m[32m===== Build complete =====
+(B[mmake[2]: Leaving directory '/mnt/e/GitHub/Symmetric/pikvm/packages/.pi-builder/rpi4-arm'
+[1m[32m===== Buildenv rpi4-arm is ready =====
+(B[mmake[1]: Leaving directory '/mnt/e/GitHub/Symmetric/pikvm/packages'
+make -C /mnt/e/GitHub/Symmetric/pikvm/packages _build BOARD=rpi4 ARCH=arm PKG=kvmd PROJECT=pikvm-packages NOSIGN=1 FORCE=1 NOINT=1
+make[1]: Entering directory '/mnt/e/GitHub/Symmetric/pikvm/packages'
+test -n "kvmd"
+[1m[32m===== Ensuring package kvmd for rpi4-arm =====
+(B[mmake _run \
+	OPTS="--shm-size=4gb --tty " \
+	CMD="/tools/buildpkg \
+		--force \
+		 \
+		 \
+		--no-sign \
+		 \
+		 \
+		--make-j 16 \
+		kvmd \
+	"
+make[2]: Entering directory '/mnt/e/GitHub/Symmetric/pikvm/packages'
+docker run \
+		--rm \
+		--privileged \
+		--ulimit "nofile=65536:1048576" \
+		--volume /mnt/e/GitHub/Symmetric/pikvm/packages/./repos/rpi4-arm:/repo:rw \
+		--volume /mnt/e/GitHub/Symmetric/pikvm/packages/./.build/rpi4-arm:/build:rw \
+		--volume /mnt/e/GitHub/Symmetric/pikvm/packages/packages:/packages:ro \
+		--volume /mnt/e/GitHub/Symmetric/pikvm/kvmd:/local-repos/kvmd:ro \
+		--env TARGET_REPO_DIR=/repo \
+		--env BUILD_DIR=/build \
+		--env PACKAGES_DIR=/packages \
+		--env LOCAL_KVMD_REPO=/local-repos/kvmd \
+		--volume $HOME/.gnupg/:/home/alarm/.gnupg/:rw \
+		--volume /run/user/1000/gnupg:/run/user/1000/gnupg:rw \
+		--mount type=tmpfs,destination=/tmp \
+		--shm-size=4gb --tty  \
+	pikvm-packages.rpi4-arm.1000-1000 \
+		/tools/buildpkg 		--force 		 		 		--no-sign 		 		 		--make-j 16 		kvmd 	
+[33;1m----- Reading PKGBUILD ...[0m
+[33;1m----- PKGBUILD: _Pkg(names={'kvmd-platform-v0-hdmi-rpi3', 'kvmd-platform-v2-hdmiusb-rpi4', 'kvmd-platform-v1-hdmiusb-rpi3', 'kvmd-platform-v1-hdmi-zero2w', 'kvmd-platform-v2-hdmi-rpi3', 'kvmd-platform-v1-hdmi-rpi3', 'kvmd-platform-v0-hdmi-zero2w', 'kvmd-platform-v4plus-hdmi-rpi4', 'kvmd-platform-v2-hdmi-zero2w', 'kvmd-platform-v1-hdmi-rpi2', 'kvmd-platform-v0-hdmiusb-rpi2', 'kvmd-platform-v0-hdmi-rpi2', 'kvmd-platform-v4mini-hdmi-rpi4', 'kvmd-platform-v2-hdmi-rpi4', 'kvmd', 'kvmd-platform-v1-hdmiusb-rpi2', 'kvmd-platform-v3-hdmi-rpi4', 'kvmd-platform-v0-hdmiusb-zero2w', 'kvmd-platform-v1-hdmiusb-zero2w', 'kvmd-platform-v0-hdmiusb-rpi3'}, version='4.100-1', deps={'iproute2', 'python-systemd', 'python-spidev', 'python-pyotp', 'python-pyserial', 'python-dbus-next', 'python-pillow', 'libxkbcommon', 'python-xlib', 'python-evdev', 'ipmitool', 'systemd>=248.3-2', 'hostapd', 'openssl', 'openssl-1.1', 'python-ldap', 'certbot', 'nginx-mainline>=1.25.1', 'wpa_supplicant-pikvm', 'python-pip', 'python-netifaces', 'python-hidapi', 'python-bcrypt', 'python-mako', 'run-parts', 'freetype2', 'v4l-utils>=1.22.1-1', 'python-aiohttp', 'python-pyghmi>=1.6.0-2', 'python-pyserial-asyncio', 'sudo', 'python-luma-oled', 'ustreamer>=6.37', 'python-aiofiles', 'raspberrypi-io-access>=0.7', 'dos2unix', 'python-pygments', 'python-dbus', 'python-pam', 'dnsmasq', 'python-pyudev', 'iptables', 'python<3.14', 'python-pyusb', 'python-async-lru', 'openssh', 'libgpiod>=2.1', 'e2fsprogs', 'python-qrcode', 'python-zstandard', 'python-periphery', 'python-six', 'zstd>=1.5.1-2.1', 'procps-ng', 'dosfstools', 'python>=3.13', 'python-passlib', 'python-setuptools', 'python-setproctitle', 'python-pyrad', 'parted', 'python-yaml', 'janus-gateway-pikvm>=1.3.0', 'raspberrypi-utils', 'python-psutil'}, keys=set(), use_distcc=False)[0m
+[33;1m----- Reading old version from the repo ...[0m
+[33;1m----- Forced rebuild of kvmd[0m
+[33;1m----- Using MAKE_J=16 (local)[0m
+[33;1m----- Appending the local repository 'pikvm' in '/repo'[0m
+[33;1m----- Preparing the build directory ...[0m
+[33;1m----- Installing dependencies ...[0m
+error: could not register 'pikvm' database (database already registered)
+[?25l:: Synchronizing package databases...
+ core
+[1F core is up to date[K[1E extra
+[1F extra is up to date[K[1E community
+[1F community is up to date[K[1E alarm
+[1F alarm is up to date[K[1E aur
+[1F aur is up to date[K[1E pikvm
+[1F pikvm is up to date[K[1E:: Starting full system upgrade...
+ there is nothing to do
+[?25herror: could not register 'pikvm' database (database already registered)
+warning: e2fsprogs-1.47.3-1 is up to date -- skipping
+warning: iproute2-6.16.0-2 is up to date -- skipping
+warning: iptables-1:1.8.11-2 is up to date -- skipping
+warning: openssh-10.0p1-5 is up to date -- skipping
+warning: openssl-3.5.3-1 is up to date -- skipping
+warning: openssl-1.1-1.1.1.w-2 is up to date -- skipping
+warning: procps-ng-4.0.5-3 is up to date -- skipping
+warning: python-yaml-6.0.2-2 is up to date -- skipping
+warning: python-3.13.7-1 is up to date -- skipping
+warning: python-3.13.7-1 is up to date -- skipping
+warning: raspberrypi-utils-20250605-1 is up to date -- skipping
+warning: sudo-1.9.17.p1-1 is up to date -- skipping
+warning: systemd-257.9-1 is up to date -- skipping
+warning: zstd-1.5.7-2 is up to date -- skipping
+[?25lresolving dependencies...
+looking for conflicting packages...
+:: wpa_supplicant-pikvm-2:2.10-9 and wpa_supplicant-2:2.11-3 are in conflict. Remove wpa_supplicant? [y/N] 
+
+Packages (146) alsa-lib-1.2.14-1  alsa-topology-conf-1.2.5.1-4
+               alsa-ucm-conf-1.2.14-2  aom-3.13.1-1  dav1d-1.5.1-1
+               dconf-0.40.0-3  fribidi-1.0.16-2  glib-networking-1:2.80.1-1
+               graphite-1:1.3.14-5  gsettings-system-schemas-48.0-1
+               gssdp-1.6.4-1  gupnp-1:1.6.9-1  gupnp-igd-1.6.0-2
+               harfbuzz-11.5.0-1  hicolor-icon-theme-0.18-1  hidapi-0.15.0-1
+               jbigkit-2.1-8  lcms2-2.17-1  libavif-1.3.0-1  libbsd-0.12.2-2
+               libconfig-1.8.1-1  libdrm-2.4.125-1  libev-4.33-4
+               libimagequant-4.4.0-1  libjpeg-turbo-3.1.2-1  libmd-1.1.0-2
+               libnice-0.1.22-2  libpciaccess-0.18.1-2  libpng-1.6.50-1
+               libproxy-0.5.11-1  libraqm-0.10.3-1  libsoup3-3.6.5-1
+               libsrtp-1:2.7.0-1  libtiff-4.7.0-1  libuv-1.51.0-1
+               libwebp-1.6.0-2  libwebsockets-4.4.1-1  libxau-1.0.12-1
+               libxcb-1.17.0-1  libxdmcp-1.1.5-1.1  libyuv-r2426+464c51a03-1
+               llhttp-9.2.1-2  mailcap-2.1.54-2  nftables-1:1.1.5-1
+               nspr-4.37-1  nss-3.116-1  openjpeg2-2.5.3-1  opus-1.5.2-1
+               python-acme-5.0.0-1  python-aiohappyeyeballs-2.6.1-1
+               python-aiosignal-1.4.0-1  python-autocommand-2.2.2-7
+               python-cbor2-5.7.0-1  python-cffi-1.17.1-2
+               python-charset-normalizer-3.4.3-1  python-configargparse-1.5.5-3
+               python-cryptography-45.0.7-1  python-dateutil-2.9.0-6
+               python-deprecated-1.2.18-1  python-distro-1.9.0-3
+               python-filelock-3.19.1-1  python-frozenlist-1.7.0-1
+               python-idna-3.10-2  python-jaraco.collections-5.1.0-1
+               python-jaraco.context-6.0.1-1  python-jaraco.functools-4.1.0-1
+               python-jaraco.text-4.0.0-2  python-josepy-2.1.0-1
+               python-luma-core-2.4.2-2  python-more-itertools-10.8.0-1
+               python-multidict-6.6.4-1  python-netaddr-1.3.0-1
+               python-packaging-25.0-1  python-parsedatetime-2.6-10
+               python-platformdirs-4.4.0-1  python-propcache-0.3.2-1
+               python-pyasn1-0.6.1-1  python-pyasn1-modules-0.4.2-1
+               python-pycparser-2.22-3  python-pyftdi-0.55.4-3
+               python-pyopenssl-25.2.0-1  python-pyrfc3339-1.1-14
+               python-pytz-2025.2-1  python-raspberry-gpio-0.7.1a4-5
+               python-requests-2.32.5-1  python-smbus2-0.4.3-3
+               python-wheel-0.45.1-1  python-wrapt-1.17.3-1
+               python-yarl-1.21.1-1  rav1e-0.7.1-1  speexdsp-1.2.1-2
+               wpa_supplicant-2:2.11-3 [removal]  xcb-proto-1.17.0-3
+               xkeyboard-config-2.45-1  xorgproto-2024.1-2  certbot-5.0.0-1
+               dnsmasq-2.91-1  dos2unix-7.5.2-2  dosfstools-4.2-5
+               freetype2-2.14.1-1  hostapd-2.11-4  ipmitool-1.8.19-4
+               janus-gateway-pikvm-1.3.1-3  libgpiod-2.1.2-2
+               libxkbcommon-1.11.0-1  nginx-mainline-1.29.1-1  parted-3.6-2
+               python-aiofiles-24.1.0-2  python-aiohttp-3.12.15-1
+               python-async-lru-2.0.5-1  python-bcrypt-4.3.0-1
+               python-dbus-1.4.0-1  python-dbus-next-0.2.3-6
+               python-evdev-1.9.2-1  python-hidapi-0.14.0-4
+               python-ldap-3.4.4-3  python-luma-oled-3.13.0-3
+               python-mako-1.3.10-1  python-netifaces-0.11.0-7
+               python-pam-2.0.2-5  python-passlib-1.7.4-10
+               python-periphery-2.3.0-6  python-pillow-11.3.0-3
+               python-pip-25.2-1  python-psutil-7.0.0-1  python-pyghmi-1.6.0-2
+               python-pygments-2.19.2-1  python-pyotp-2.9.0-3
+               python-pyrad-2.4.1-6  python-pyserial-3.5-7
+               python-pyserial-asyncio-0.6-6  python-pyudev-0.24.3-2
+               python-pyusb-1.3.1-1  python-qrcode-8.2-1
+               python-setproctitle-1.3.7-1  python-setuptools-1:80.9.0-2
+               python-six-1.17.0-1  python-spidev-3.6-6  python-systemd-235-4
+               python-xlib-0.33-4  python-zstandard-0.25.0-1
+               raspberrypi-io-access-0.7-1  run-parts-5.23.1-1
+               ustreamer-6.40-1  v4l-utils-1.30.1-1
+               wpa_supplicant-pikvm-2:2.10-9
+
+Total Download Size:    46.22 MiB
+Total Installed Size:  226.42 MiB
+Net Upgrade Size:      220.36 MiB
+
+:: Proceed with installation? [Y/n] 
+:: Retrieving packages...
+ opus-1.5.2-1-armv7h
+ Total (  0/145)         0.0   B  0.00   B/s 00:00 [----------------------]   0%
+[2F opus-1.5.2-1-armv7h     0.0   B  0.00   B/s --:-- [----------------------]   0%[1E Total (  0/145)         0.0   B  0.00   B/s --:-- [----------------------]   0%[1F opus-1.5.2-1-armv7h   337.1 KiB   493 KiB/s 00:07 [#---------------------]   7%[1E Total (  0/145)       337.1 KiB   493 KiB/s 01:35 [----------------------]   0%[1F opus-1.5.2-1-armv7h     2.3 MiB  3.54 MiB/s 00:00 [############----------]  55%[1E Total (  0/145)         2.3 MiB  3.54 MiB/s 00:12 [----------------------]   4%[1F opus-1.5.2-1-armv7h     4.1 MiB  5.40 MiB/s 00:00 [#####################-]  99%[1E Total (  0/145)         4.1 MiB  5.40 MiB/s 00:07 [#---------------------]   8%[1F opus-1.5.2-1-armv7h     4.1 MiB  5.17 MiB/s 00:01 [######################] 100%[1E python-pip-25.2-1-any
+ Total (  1/145)         4.1 MiB  5.40 MiB/s 00:07 [#---------------------]   8%
+[2F python-pip-25.2-...     4.2 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total (  1/145)         5.6 MiB  6.06 MiB/s 00:06 [##--------------------]  12%[1F python-pip-25.2-...     2.4 MiB  11.4 MiB/s 00:00 [######################] 100%[1E python-pygments-2.19.2-1-any
+ Total (  2/145)         5.6 MiB  6.06 MiB/s 00:06 [##--------------------]  12%
+[2F python-pygments-...     4.3 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total (  2/145)         7.2 MiB  6.74 MiB/s 00:05 [###-------------------]  15%[1F python-pygments-...     2.1 MiB  3.41 MiB/s 00:00 [####################--]  93% python-pygments-...     2.2 MiB  9.21 MiB/s 00:00 [######################] 100%[1E aom-3.13.1-1-armv7h
+ Total (  3/145)         7.2 MiB  6.74 MiB/s 00:05 [###-------------------]  15%
+[2F aom-3.13.1-1-armv7h     4.2 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total (  3/145)         8.9 MiB  7.21 MiB/s 00:05 [####------------------]  19%[1F aom-3.13.1-1-armv7h  1366.1 KiB  2.22 MiB/s 00:00 [###############-------]  70%[1E Total (  3/145)        10.2 MiB  7.00 MiB/s 00:05 [####------------------]  22%[1F aom-3.13.1-1-armv7h  1936.8 KiB  6.33 MiB/s 00:00 [######################] 100%[1E ipmitool-1.8.19-4-armv7h
+ Total (  4/145)        10.2 MiB  7.00 MiB/s 00:05 [####------------------]  22%
+[2F ipmitool-1.8.19-...     4.2 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total (  4/145)        12.0 MiB  7.68 MiB/s 00:04 [#####-----------------]  26%[1F ipmitool-1.8.19-...  1903.9 KiB  13.3 MiB/s 00:00 [######################] 100%[1E v4l-utils-1.30.1-1-armv7h
+ Total (  5/145)        12.0 MiB  7.68 MiB/s 00:04 [#####-----------------]  26%
+[2F v4l-utils-1.30.1...    13.9 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total (  5/145)        14.1 MiB  8.52 MiB/s 00:03 [######----------------]  30%[1F v4l-utils-1.30.1...  1860.1 KiB  9.51 MiB/s 00:00 [######################] 100%[1E janus-gateway-pikvm-1.3.1-3-armv7h
+ Total (  6/145)        14.1 MiB  8.52 MiB/s 00:03 [######----------------]  30%
+[2F janus-gateway-pi...    15.7 KiB  0.00   B/s --:-- [----------------------]   1%[1E Total (  6/145)        14.3 MiB  5.77 MiB/s 00:05 [######----------------]  31%[1F janus-gateway-pi...    95.7 KiB  83.6 KiB/s 00:17 [#---------------------]   6%[1E Total (  6/145)        14.4 MiB  3.93 MiB/s 00:08 [######----------------]  31%[1F janus-gateway-pi...   447.7 KiB   428 KiB/s 00:02 [######----------------]  28%[1E Total (  6/145)        14.8 MiB  2.98 MiB/s 00:10 [######----------------]  31%[1F janus-gateway-pi...   991.7 KiB  1099 KiB/s 00:00 [#############---------]  63%[1E Total (  6/145)        15.3 MiB  2.78 MiB/s 00:11 [#######---------------]  33%[1F janus-gateway-pi...  1343.7 KiB  1268 KiB/s 00:00 [##################----]  86%[1E Total (  6/145)        15.6 MiB  2.38 MiB/s 00:12 [#######---------------]  33%[1F janus-gateway-pi...  1560.2 KiB   789 KiB/s 00:02 [######################] 100%[1E python-netaddr-1.3.0-1-any
+ Total (  7/145)        15.6 MiB  2.38 MiB/s 00:12 [#######---------------]  33%
+[2F python-netaddr-1...     0.0   B  0.00   B/s --:-- [----------------------]   0%[1E Total (  7/145)        15.9 MiB  1935 KiB/s 00:16 [#######---------------]  34%[1F python-netaddr-1...  1545.1 KiB  10.2 MiB/s 00:00 [######################] 100%[1E nss-3.116-1-armv7h
+ Total (  8/145)        15.9 MiB  1935 KiB/s 00:16 [#######---------------]  34%
+[2F nss-3.116-1-armv7h      8.4 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total (  8/145)        17.4 MiB  3.66 MiB/s 00:07 [########--------------]  37%[1F nss-3.116-1-armv7h   1329.7 KiB  10.6 MiB/s 00:00 [######################] 100%[1E python-setuptools-1:80.9.0-2-any
+ Total (  9/145)        17.4 MiB  3.66 MiB/s 00:07 [########--------------]  37%
+[2F python-setuptool...     8.3 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total (  9/145)        18.9 MiB  5.02 MiB/s 00:05 [########--------------]  40%[1F python-setuptool...  1203.9 KiB  7.79 MiB/s 00:00 [######################] 100%[1E wpa_supplicant-pikvm-2:2.10-9-armv7h
+ Total ( 10/145)        18.9 MiB  5.02 MiB/s 00:05 [########--------------]  40%
+[2F wpa_supplicant-p...   175.7 KiB  0.00   B/s --:-- [###-------------------]  14%[1E Total ( 10/145)        20.0 MiB  4.53 MiB/s 00:05 [#########-------------]  43%[1F wpa_supplicant-p...   655.7 KiB   800 KiB/s 00:00 [############----------]  55%[1E Total ( 10/145)        20.5 MiB  3.79 MiB/s 00:06 [#########-------------]  44%[1F wpa_supplicant-p...  1188.8 KiB  1375 KiB/s 00:00 [######################] 100%[1E Total ( 10/145)        21.0 MiB  3.36 MiB/s 00:07 [#########-------------]  45%[1F wpa_supplicant-p...  1188.8 KiB  1949 KiB/s 00:01 [######################] 100%[1E python-cryptography-45.0.7-1-armv7h
+ Total ( 11/145)        21.0 MiB  3.36 MiB/s 00:07 [#########-------------]  45%
+[2F python-cryptogra...    12.5 KiB  0.00   B/s --:-- [----------------------]   1%[1E Total ( 11/145)        21.1 MiB  2.37 MiB/s 00:10 [#########-------------]  45%[1F python-cryptogra...  1052.3 KiB  6.81 MiB/s 00:00 [######################] 100%[1E harfbuzz-11.5.0-1-armv7h
+ Total ( 12/145)        21.1 MiB  2.37 MiB/s 00:10 [#########-------------]  45%
+[2F harfbuzz-11.5.0-...     4.2 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total ( 12/145)        22.3 MiB  3.54 MiB/s 00:06 [##########------------]  48%[1F harfbuzz-11.5.0-...   986.8 KiB  5.51 MiB/s 00:00 [######################] 100%[1E rav1e-0.7.1-1-armv7h
+ Total ( 13/145)        22.3 MiB  3.54 MiB/s 00:06 [##########------------]  48%
+[2F rav1e-0.7.1-1-armv7h   17.0 KiB  0.00   B/s --:-- [----------------------]   1%[1E Total ( 13/145)        23.3 MiB  3.98 MiB/s 00:05 [###########-----------]  50%[1F rav1e-0.7.1-1-armv7h  975.1 KiB  6.61 MiB/s 00:00 [######################] 100%[1E libxcb-1.17.0-1-armv7h
+ Total ( 14/145)        23.3 MiB  3.98 MiB/s 00:05 [###########-----------]  50%
+[2F libxcb-1.17.0-1-...     6.9 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total ( 14/145)        24.3 MiB  4.37 MiB/s 00:05 [###########-----------]  52%[1F libxcb-1.17.0-1-...   967.4 KiB  5.94 MiB/s 00:00 [######################] 100%[1E openjpeg2-2.5.3-1-armv7h
+ Total ( 15/145)        24.3 MiB  4.37 MiB/s 00:05 [###########-----------]  52%
+[2F openjpeg2-2.5.3-...     4.2 KiB  0.00   B/s --:-- [----------------------]   0% openjpeg2-2.5.3-...   928.9 KiB  10.9 MiB/s 00:00 [######################] 100%[1E certbot-5.0.0-1-any
+ Total ( 16/145)        24.3 MiB  4.37 MiB/s 00:05 [###########-----------]  52%
+[2F certbot-5.0.0-1-any     6.9 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total ( 16/145)        25.8 MiB  4.76 MiB/s 00:04 [############----------]  55%[1F certbot-5.0.0-1-any   837.2 KiB  5.88 MiB/s 00:00 [######################] 100%[1E xkeyboard-config-2.45-1-any
+ Total ( 17/145)        25.8 MiB  4.76 MiB/s 00:04 [############----------]  55%
+[2F xkeyboard-config...     2.9 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total ( 17/145)        26.9 MiB  5.01 MiB/s 00:03 [############----------]  58%[1F xkeyboard-config...   804.3 KiB  6.33 MiB/s 00:00 [######################] 100%[1E python-pillow-11.3.0-3-armv7h
+ Total ( 18/145)        26.9 MiB  5.01 MiB/s 00:03 [############----------]  58%
+[2F python-pillow-11...     4.2 KiB  0.00   B/s --:-- [----------------------]   0% python-pillow-11...   803.7 KiB  9.93 MiB/s 00:00 [######################] 100%[1E python-passlib-1.7.4-10-any
+ Total ( 19/145)        26.9 MiB  5.01 MiB/s 00:03 [############----------]  58%
+[2F python-passlib-1...    39.2 KiB  0.00   B/s --:-- [#---------------------]   5%[1E Total ( 19/145)        28.2 MiB  5.28 MiB/s 00:03 [#############---------]  61%[1F python-passlib-1...   777.4 KiB  10.5 MiB/s 00:00 [######################] 100%[1E hostapd-2.11-4-armv7h
+ Total ( 20/145)        28.2 MiB  5.28 MiB/s 00:03 [#############---------]  61%
+[2F hostapd-2.11-4-a...    22.2 KiB  0.00   B/s --:-- [----------------------]   3% hostapd-2.11-4-a...   673.5 KiB  8.33 MiB/s 00:00 [######################] 100%[1E python-aiohttp-3.12.15-1-armv7h
+ Total ( 21/145)        28.2 MiB  5.28 MiB/s 00:03 [#############---------]  61%
+[2F python-aiohttp-3...    29.6 KiB  0.00   B/s --:-- [----------------------]   4%[1E Total ( 21/145)        29.6 MiB  5.70 MiB/s 00:02 [##############--------]  64%[1F python-aiohttp-3...   618.7 KiB  5.03 MiB/s 00:00 [######################] 100%[1E parted-3.6-2-armv7h
+ Total ( 22/145)        29.6 MiB  5.70 MiB/s 00:02 [##############--------]  64%
+[2F parted-3.6-2-armv7h    25.7 KiB  0.00   B/s --:-- [#---------------------]   5%[1E Total ( 22/145)        30.3 MiB  4.86 MiB/s 00:03 [##############--------]  65%[1F parted-3.6-2-armv7h   483.9 KiB  5.91 MiB/s 00:00 [######################] 100%[1E nginx-mainline-1.29.1-1-armv7h
+ Total ( 23/145)        30.3 MiB  4.86 MiB/s 00:03 [##############--------]  65%
+[2F nginx-mainline-1...    20.8 KiB  0.00   B/s --:-- [----------------------]   4% nginx-mainline-1...   480.6 KiB  5.94 MiB/s 00:00 [######################] 100%[1E libwebsockets-4.4.1-1-armv7h
+ Total ( 24/145)        30.3 MiB  4.86 MiB/s 00:03 [##############--------]  65%
+[2F libwebsockets-4....    11.3 KiB  0.00   B/s --:-- [----------------------]   2%[1E Total ( 24/145)        31.6 MiB  5.29 MiB/s 00:02 [##############--------]  68%[1F libwebsockets-4....   475.5 KiB  6.83 MiB/s 00:00 [######################] 100%[1E python-pyghmi-1.6.0-2-any
+ Total ( 25/145)        31.6 MiB  5.29 MiB/s 00:02 [##############--------]  68%
+[2F python-pyghmi-1....    31.7 KiB  0.00   B/s --:-- [#---------------------]   6%[1E Total ( 25/145)        31.6 MiB  3.58 MiB/s 00:04 [##############--------]  68%[1F python-pyghmi-1....    95.7 KiB  69.5 KiB/s 00:05 [####------------------]  20%[1E Total ( 25/145)        31.7 MiB  2.45 MiB/s 00:05 [##############--------]  68%[1F python-pyghmi-1....   431.7 KiB   598 KiB/s 00:00 [####################--]  94%[1E Total ( 25/145)        32.0 MiB  2.17 MiB/s 00:06 [###############-------]  69%[1F python-pyghmi-1....   457.8 KiB   473 KiB/s 00:01 [######################] 100%[1E freetype2-2.14.1-1-armv7h
+ Total ( 26/145)        32.0 MiB  2.17 MiB/s 00:06 [###############-------]  69%
+[2F freetype2-2.14.1...    11.3 KiB  0.00   B/s --:-- [----------------------]   2%[1E Total ( 26/145)        32.1 MiB  1523 KiB/s 00:09 [###############-------]  69%[1F freetype2-2.14.1...   443.6 KiB  6.37 MiB/s 00:00 [######################] 100%[1E speexdsp-1.2.1-2-armv7h
+ Total ( 27/145)        32.1 MiB  1523 KiB/s 00:09 [###############-------]  69%
+[2F speexdsp-1.2.1-2...     6.9 KiB  0.00   B/s --:-- [----------------------]   1% speexdsp-1.2.1-2...   442.6 KiB  7.20 MiB/s 00:00 [######################] 100%[1E libtiff-4.7.0-1-armv7h
+ Total ( 28/145)        32.1 MiB  1523 KiB/s 00:09 [###############-------]  69%
+[2F libtiff-4.7.0-1-...    17.0 KiB  0.00   B/s --:-- [----------------------]   3%[1E Total ( 28/145)        32.9 MiB  2.42 MiB/s 00:05 [###############-------]  71%[1F libtiff-4.7.0-1-...   440.8 KiB  3.47 MiB/s 00:00 [######################] 100%[1E dos2unix-7.5.2-2-armv7h
+ Total ( 29/145)        32.9 MiB  2.42 MiB/s 00:05 [###############-------]  71%
+[2F dos2unix-7.5.2-2...     0.0   B  0.00   B/s --:-- [----------------------]   0%[1E Total ( 29/145)        33.4 MiB  2.21 MiB/s 00:05 [###############-------]  72%[1F dos2unix-7.5.2-2...    28.5 KiB  46.8 KiB/s 00:08 [#---------------------]   6%[1E Total ( 29/145)        33.4 MiB  1565 KiB/s 00:08 [###############-------]  72%[1F dos2unix-7.5.2-2...    68.4 KiB  96.8 KiB/s 00:03 [###-------------------]  15%[1E Total ( 29/145)        33.4 MiB  1122 KiB/s 00:11 [###############-------]  72%[1F dos2unix-7.5.2-2...   131.2 KiB   168 KiB/s 00:01 [######----------------]  30%[1E Total ( 29/145)        33.5 MiB   869 KiB/s 00:14 [###############-------]  72%[1F dos2unix-7.5.2-2...   233.8 KiB   274 KiB/s 00:00 [###########-----------]  54%[1E Total ( 29/145)        33.6 MiB   760 KiB/s 00:16 [###############-------]  72%[1F dos2unix-7.5.2-2...   356.4 KiB   384 KiB/s 00:00 [##################----]  83%[1E Total ( 29/145)        33.8 MiB   723 KiB/s 00:17 [################------]  73%[1F dos2unix-7.5.2-2...   427.9 KiB   353 KiB/s 00:01 [######################] 100%[1E alsa-lib-1.2.14-1-armv7h
+ Total ( 30/145)        33.8 MiB   723 KiB/s 00:17 [################------]  73%
+[2F alsa-lib-1.2.14-...     2.9 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total ( 30/145)        33.8 MiB   599 KiB/s 00:21 [################------]  73%[1F alsa-lib-1.2.14-...   162.5 KiB   262 KiB/s 00:00 [########--------------]  39%[1E Total ( 30/145)        34.0 MiB   670 KiB/s 00:18 [################------]  73%[1F alsa-lib-1.2.14-...   347.9 KiB   479 KiB/s 00:00 [##################----]  85% alsa-lib-1.2.14-...   406.5 KiB   810 KiB/s 00:01 [######################] 100%[1E libjpeg-turbo-3.1.2-1-armv7h
+ Total ( 31/145)        34.0 MiB   670 KiB/s 00:18 [################------]  73%
+[2F libjpeg-turbo-3....     2.9 KiB  0.00   B/s --:-- [----------------------]   0%[1E Total ( 31/145)        34.2 MiB   697 KiB/s 00:17 [################------]  73%[1F libjpeg-turbo-3....   231.0 KiB   375 KiB/s 00:00 [############----------]  58%[1E Total ( 31/145)        34.4 MiB   839 KiB/s 00:14 [################------]  74%[1F libjpeg-turbo-3....   394.8 KiB  1079 KiB/s 00:00 [######################] 100%[1E libdrm-2.4.125-1-armv7h
+ Total ( 32/145)        34.4 MiB   839 KiB/s 00:14 [################------]  74%
+[2F libdrm-2.4.125-1...     5.7 KiB  0.00   B/s --:-- [----------------------]   1%[1E Total ( 32/145)        34.6 MiB   875 KiB/s 00:13 [################------]  74%[1F libdrm-2.4.125-1...   347.9 KiB   541 KiB/s 00:00 [####################--]  93%[1E Total ( 32/145)        34.9 MiB  1119 KiB/s 00:10 [################------]  75%[1F libdrm-2.4.125-1...   372.6 KiB  1422 KiB/s 00:00 [######################] 100%[1E dnsmasq-2.91-1-armv7h
+ Total ( 33/145)        34.9 MiB  1119 KiB/s 00:10 [################------]  75%
+[2F dnsmasq-2.91-1-a...     5.7 KiB  0.00   B/s --:-- [----------------------]   1%[1E Total ( 33/145)        35.1 MiB  1042 KiB/s 00:10 [################------]  75%[1F dnsmasq-2.91-1-a...   239.5 KiB   377 KiB/s 00:00 [##############--------]  67% dnsmasq-2.91-1-a...   357.2 KiB  1009 KiB/s 00:00 [######################] 100%[1E nftables-1:1.1.5-1-armv7h
+ Total ( 34/145)        35.1 MiB  1042 KiB/s 00:10 [################------]  75%
+[2F nftables-1:1.1.5...     0.0   B  0.00   B/s --:-- [----------------------]   0%[1E Total ( 34/145)        35.3 MiB   934 KiB/s 00:12 [################------]  76%[1F nftables-1:1.1.5...   317.9 KiB   493 KiB/s 00:00 [####################--]  91%[1E Total ( 34/145)        35.6 MiB  1116 KiB/s 00:09 [################------]  76%[1F nftables-1:1.1.5...   347.1 KiB  1300 KiB/s 00:00 [######################] 100%[1E python-zstandard-0.25.0-1-armv7h
+ Total ( 35/145)        35.6 MiB  1116 KiB/s 00:09 [################------]  76%
+[2F python-zstandard...     0.0   B  0.00   B/s --:-- [----------------------]   0%[1E Total ( 35/145)        35.8 MiB  1135 KiB/s 00:09 [################------]  77%[1F python-zstandard...   346.9 KiB  1584 KiB/s 00:00 [######################] 100%[1E libsoup3-3.6.5-1-armv7h
+ Total ( 36/145)        35.8 MiB  1135 KiB/s 00:09 [################------]  77%
+[2F libsoup3-3.6.5-1...    14.3 KiB  0.00   B/s --:-- [----------------------]   4%[1E Total ( 36/145)        36.1 MiB  1177 KiB/s 00:08 [#################-----]  78%[1F libsoup3-3.6.5-1...   343.3 KiB  1691 KiB/s 00:00 [######################] 100%[1E python-dateutil-2.9.0-6-any
+ Total ( 37/145)        36.1 MiB  1177 KiB/s 00:08 [#################-----]  78%
+[2F python-dateutil-...    14.3 KiB  0.00   B/s --:-- [----------------------]   4%[1E Total ( 37/145)        36.4 MiB  1285 KiB/s 00:07 [#################-----]  78%[1F python-dateutil-...   298.5 KiB  1788 KiB/s 00:00 [######################] 100%[1E dav1d-1.5.1-1-armv7h
+ Total ( 38/145)        36.4 MiB  1285 KiB/s 00:07 [#################-----]  78%
+[2F dav1d-1.5.1-1-armv7h    5.7 KiB  0.00   B/s --:-- [----------------------]   1%[1E Total ( 38/145)        36.7 MiB  1394 KiB/s 00:07 [#################-----]  79%[1F dav1d-1.5.1-1-armv7h  297.4 KiB  1919 KiB/s 00:00 [######################] 100%[1E libnice-0.1.22-2-armv7h
+ Total ( 39/145)        36.7 MiB  1394 KiB/s 00:07 [#################-----]  79%
+[2F libnice-0.1.22-2...     5.7 KiB  0.00   B/s --:-- [----------------------]   2%[1E Total ( 39/145)        37.0 MiB  1498 KiB/s 00:06 [#################-----]  80%[1F libnice-0.1.22-2...   276.2 KiB  2.12 MiB/s 00:00 [######################] 100%[1E python-xlib-0.33-4-any
+ Total ( 40/145)        37.0 MiB  1498 KiB/s 00:06 [#################-----]  80%
+[2F python-xlib-0.33...     0.0   B  0.00   B/s --:-- [----------------------]   0%[1E Total ( 40/145)        37.4 MiB  1597 KiB/s 00:05 [#################-----]  80%[1F python-xlib-0.33...   262.1 KiB  1941 KiB/s 00:00 [######################] 100%[1E python-pyasn1-modules-0.4.2-1-any
+ Total ( 41/145)        37.4 MiB  1597 KiB/s 00:05 [#################-----]  80%
+[2F python-pyasn1-mo...    22.8 KiB  0.00   B/s --:-- [#---------------------]   8% python-pyasn1-mo...   260.8 KiB  2.38 MiB/s 00:00 [######################] 100%[1E python-cffi-1.17.1-2-armv7h
+ Total ( 42/145)        37.4 MiB  1597 KiB/s 00:05 [#################-----]  80%
+[2F python-cffi-1.17...    16.6 KiB  0.00   B/s --:-- [#---------------------]   6%[1E Total ( 42/145)        37.7 MiB  1445 KiB/s 00:06 [#################-----]  81%[1F python-cffi-1.17...   255.6 KiB  2.15 MiB/s 00:00 [######################] 100%[1E libuv-1.51.0-1-armv7h
+ Total ( 43/145)        37.7 MiB  1445 KiB/s 00:06 [#################-----]  81%
+[2F libuv-1.51.0-1-a...     5.7 KiB  0.00   B/s --:-- [----------------------]   2%[1E Total ( 43/145)        38.0 MiB  1576 KiB/s 00:05 [##################----]  82%[1F libuv-1.51.0-1-a...   232.8 KiB  2.11 MiB/s 00:00 [######################] 100%[1E libavif-1.3.0-1-armv7h
+ Total ( 44/145)        38.0 MiB  1576 KiB/s 00:05 [##################----]  82%
+[2F libavif-1.3.0-1-...    12.8 KiB  0.00   B/s --:-- [#---------------------]   5% libavif-1.3.0-1-...   232.6 KiB  2.88 MiB/s 00:00 [######################] 100%[1E xorgproto-2024.1-2-any
+ Total ( 45/145)        38.0 MiB  1576 KiB/s 00:05 [##################----]  82%
+[2F xorgproto-2024.1...     4.3 KiB  0.00   B/s --:-- [----------------------]   1%[1E Total ( 45/145)        38.4 MiB  1552 KiB/s 00:05 [##################----]  82%[1F xorgproto-2024.1...   231.2 KiB  3.14 MiB/s 00:00 [######################] 100%[1E libxkbcommon-1.11.0-1-armv7h
+ Total ( 46/145)        38.4 MiB  1552 KiB/s 00:05 [##################----]  82%
+[2F libxkbcommon-1.1...    11.2 KiB  0.00   B/s --:-- [----------------------]   4% libxkbcommon-1.1...   229.4 KiB  2.95 MiB/s 00:00 [######################] 100%[1E libimagequant-4.4.0-1-armv7h
+ Total ( 47/145)        38.4 MiB  1552 KiB/s 00:05 [##################----]  82%
+[2F libimagequant-4....     5.7 KiB  0.00   B/s --:-- [----------------------]   2%[1E Total ( 47/145)        38.8 MiB  1679 KiB/s 00:04 [##################----]  83%[1F libimagequant-4....   222.9 KiB  3.25 MiB/s 00:00 [######################] 100%[1E libpng-1.6.50-1-armv7h
+ Total ( 48/145)        38.8 MiB  1679 KiB/s 00:04 [##################----]  83%
+[2F libpng-1.6.50-1-...    28.0 KiB  0.00   B/s --:-- [##--------------------]  12% libpng-1.6.50-1-...   221.5 KiB  3.38 MiB/s 00:00 [######################] 100%[1E python-pyftdi-0.55.4-3-any
+ Total ( 49/145)        38.8 MiB  1679 KiB/s 00:04 [##################----]  83%
+[2F python-pyftdi-0....    31.7 KiB  0.00   B/s --:-- [###-------------------]  14%[1E Total ( 49/145)        39.3 MiB  1451 KiB/s 00:04 [##################----]  84%[1F python-pyftdi-0....    95.7 KiB  67.1 KiB/s 00:01 [#########-------------]  43%[1E Total ( 49/145)        39.3 MiB  1035 KiB/s 00:06 [##################----]  85%[1F python-pyftdi-0....   221.3 KiB   274 KiB/s 00:01 [######################] 100%[1E libwebp-1.6.0-2-armv7h
+ Total ( 50/145)        39.3 MiB  1035 KiB/s 00:06 [##################----]  85%
+[2F libwebp-1.6.0-2-...     5.5 KiB  0.00   B/s --:-- [----------------------]   2%[1E Total ( 50/145)        39.5 MiB   808 KiB/s 00:08 [##################----]  85%[1F libwebp-1.6.0-2-...   215.6 KiB  2.81 MiB/s 00:00 [######################] 100%[1E python-pycparser-2.22-3-any
+ Total ( 51/145)        39.5 MiB   808 KiB/s 00:08 [##################----]  85%
+[2F python-pycparser...    31.2 KiB  0.00   B/s --:-- [###-------------------]  14% python-pycparser...   211.6 KiB  2.49 MiB/s 00:00 [######################] 100%[1E ustreamer-6.40-1-armv7h
+ Total ( 52/145)        39.5 MiB   808 KiB/s 00:08 [##################----]  85%
+[2F ustreamer-6.40-1...   111.7 KiB  0.00   B/s --:-- [############----------]  59%[1E Total ( 52/145)        40.0 MiB  1019 KiB/s 00:06 [##################----]  86%[1F ustreamer-6.40-1...   189.2 KiB   558 KiB/s 00:00 [######################] 100%[1E python-bcrypt-4.3.0-1-armv7h
+ Total ( 53/145)        40.0 MiB  1019 KiB/s 00:06 [##################----]  86%
+[2F python-bcrypt-4....    12.5 KiB  0.00   B/s --:-- [#---------------------]   6%[1E Total ( 53/145)        40.1 MiB   764 KiB/s 00:08 [##################----]  86%[1F python-bcrypt-4....   188.5 KiB  1762 KiB/s 00:00 [######################] 100%[1E python-psutil-7.0.0-1-armv7h
+ Total ( 54/145)        40.1 MiB   764 KiB/s 00:08 [##################----]  86%
+[2F python-psutil-7....    14.3 KiB  0.00   B/s --:-- [#---------------------]   7% python-psutil-7....   187.1 KiB  2.44 MiB/s 00:00 [######################] 100%[1E python-ldap-3.4.4-3-armv7h
+ Total ( 55/145)        40.1 MiB   764 KiB/s 00:08 [##################----]  86%
+[2F python-ldap-3.4....     7.1 KiB  0.00   B/s --:-- [----------------------]   3%[1E Total ( 55/145)        40.4 MiB   928 KiB/s 00:06 [###################---]  87%[1F python-ldap-3.4....   185.3 KiB  1084 KiB/s 00:00 [######################] 100%[1E lcms2-2.17-1-armv7h
+ Total ( 56/145)        40.4 MiB   928 KiB/s 00:06 [###################---]  87%
+[2F lcms2-2.17-1-armv7h     7.1 KiB  0.00   B/s --:-- [----------------------]   4% lcms2-2.17-1-armv7h   175.5 KiB  3.30 MiB/s 00:00 [######################] 100%[1E python-acme-5.0.0-1-any
+ Total ( 57/145)        40.4 MiB   928 KiB/s 00:06 [###################---]  87%
+[2F python-acme-5.0....     5.5 KiB  0.00   B/s --:-- [----------------------]   3%[1E Total ( 57/145)        40.8 MiB  1083 KiB/s 00:05 [###################---]  88%[1F python-acme-5.0....   171.2 KiB  3.04 MiB/s 00:00 [######################] 100%[1E nspr-4.37-1-armv7h
+ Total ( 58/145)        40.8 MiB  1083 KiB/s 00:05 [###################---]  88%
+[2F nspr-4.37-1-armv7h     16.6 KiB  0.00   B/s --:-- [#---------------------]   9% nspr-4.37-1-armv7h    169.0 KiB  2.95 MiB/s 00:00 [######################] 100%[1E python-mako-1.3.10-1-any
+ Total ( 59/145)        40.8 MiB  1083 KiB/s 00:05 [###################---]  88%
+[2F python-mako-1.3....    22.7 KiB  0.00   B/s --:-- [##--------------------]  13% python-mako-1.3....   162.1 KiB  3.68 MiB/s 00:00 [######################] 100%[1E python-pyserial-3.5-7-any
+ Total ( 60/145)        40.8 MiB  1083 KiB/s 00:05 [###################---]  88%
+[2F python-pyserial-...    11.4 KiB  0.00   B/s --:-- [#---------------------]   7%[1E Total ( 60/145)        41.3 MiB  1376 KiB/s 00:03 [###################---]  89%[1F python-pyserial-...   157.8 KiB  2.57 MiB/s 00:00 [######################] 100%[1E libbsd-0.12.2-2-armv7h
+ Total ( 61/145)        41.3 MiB  1376 KiB/s 00:03 [###################---]  89%
+[2F libbsd-0.12.2-2-...     0.0   B  0.00   B/s --:-- [----------------------]   0% libbsd-0.12.2-2-...   157.6 KiB  1995 KiB/s 00:00 [######################] 100%[1E python-pyasn1-0.6.1-1-any
+ Total ( 62/145)        41.3 MiB  1376 KiB/s 00:03 [###################---]  89%
+[2F python-pyasn1-0....     5.5 KiB  0.00   B/s --:-- [----------------------]   3% python-pyasn1-0....   155.4 KiB  3.45 MiB/s 00:00 [######################] 100%[1E python-charset-normalizer-3.4.3-1-armv7h
+ Total ( 63/145)        41.3 MiB  1376 KiB/s 00:03 [###################---]  89%
+[2F python-charset-n...    13.9 KiB  0.00   B/s --:-- [#---------------------]   9%[1E Total ( 63/145)        41.7 MiB  1517 KiB/s 00:03 [###################---]  90%[1F python-charset-n...   150.6 KiB  3.68 MiB/s 00:00 [######################] 100%[1E libyuv-r2426+464c51a03-1-armv7h
+ Total ( 64/145)        41.7 MiB  1517 KiB/s 00:03 [###################---]  90%
+[2F libyuv-r2426+464...    34.8 KiB  0.00   B/s --:-- [#####-----------------]  23% libyuv-r2426+464...   145.0 KiB  3.54 MiB/s 00:00 [######################] 100%[1E python-pyudev-0.24.3-2-any
+ Total ( 65/145)        41.7 MiB  1517 KiB/s 00:03 [###################---]  90%
+[2F python-pyudev-0....     0.0   B  0.00   B/s --:-- [----------------------]   0% python-pyudev-0....   135.8 KiB  2.07 MiB/s 00:00 [######################] 100%[1E dosfstools-4.2-5-armv7h
+ Total ( 66/145)        41.7 MiB  1517 KiB/s 00:03 [###################---]  90%
+[2F dosfstools-4.2-5...    19.7 KiB  0.00   B/s --:-- [###-------------------]  15%[1E Total ( 66/145)        42.2 MiB  1576 KiB/s 00:02 [####################--]  91%[1F dosfstools-4.2-5...   126.9 KiB  3.10 MiB/s 00:00 [######################] 100%[1E glib-networking-1:2.80.1-1-armv7h
+ Total ( 67/145)        42.2 MiB  1576 KiB/s 00:02 [####################--]  91%
+[2F glib-networking-...     0.0   B  0.00   B/s --:-- [----------------------]   0% glib-networking-...   125.6 KiB  1847 KiB/s 00:00 [######################] 100%[1E xcb-proto-1.17.0-3-any
+ Total ( 68/145)        42.2 MiB  1576 KiB/s 00:02 [####################--]  91%
+[2F xcb-proto-1.17.0...    16.6 KiB  0.00   B/s --:-- [##--------------------]  13% xcb-proto-1.17.0...   123.7 KiB  3.02 MiB/s 00:00 [######################] 100%[1E libgpiod-2.1.2-2-armv7h
+ Total ( 69/145)        42.2 MiB  1576 KiB/s 00:02 [####################--]  91%
+[2F libgpiod-2.1.2-2...    19.4 KiB  0.00   B/s --:-- [###-------------------]  16%[1E Total ( 69/145)        42.5 MiB  1550 KiB/s 00:02 [####################--]  91%[1F libgpiod-2.1.2-2...   121.1 KiB  3.69 MiB/s 00:00 [######################] 100%[1E python-packaging-25.0-1-any
+ Total ( 70/145)        42.5 MiB  1550 KiB/s 00:02 [####################--]  91%
+[2F python-packaging...     0.0   B  0.00   B/s --:-- [----------------------]   0% python-packaging...   120.3 KiB  3.01 MiB/s 00:00 [######################] 100%[1E python-more-itertools-10.8.0-1-any
+ Total ( 71/145)        42.5 MiB  1550 KiB/s 00:02 [####################--]  91%
+[2F python-more-iter...    12.5 KiB  0.00   B/s --:-- [##--------------------]  10% python-more-iter...   116.4 KiB  3.16 MiB/s 00:00 [######################] 100%[1E python-dbus-next-0.2.3-6-any
+ Total ( 72/145)        42.5 MiB  1550 KiB/s 00:02 [####################--]  91%
+[2F python-dbus-next...     6.9 KiB  0.00   B/s --:-- [#---------------------]   5%[1E Total ( 72/145)        42.9 MiB  1549 KiB/s 00:02 [####################--]  92%[1F python-dbus-next...   116.1 KiB  2.83 MiB/s 00:00 [######################] 100%[1E libev-4.33-4-armv7h
+ Total ( 73/145)        42.9 MiB  1549 KiB/s 00:02 [####################--]  92%
+[2F libev-4.33-4-armv7h    31.0 KiB  0.00   B/s --:-- [#####-----------------]  27% libev-4.33-4-armv7h   114.7 KiB  2.55 MiB/s 00:00 [######################] 100%[1E python-requests-2.32.5-1-any
+ Total ( 74/145)        42.9 MiB  1549 KiB/s 00:02 [####################--]  92%
+[2F python-requests-...     6.9 KiB  0.00   B/s --:-- [#---------------------]   6% python-requests-...   114.1 KiB  2.53 MiB/s 00:00 [######################] 100%[1E python-luma-core-2.4.2-2-any
+ Total ( 75/145)        42.9 MiB  1549 KiB/s 00:02 [####################--]  92%
+[2F python-luma-core...    31.7 KiB  0.00   B/s --:-- [######----------------]  28%[1E Total ( 75/145)        43.2 MiB  1261 KiB/s 00:02 [####################--]  93%[1F python-luma-core...   111.8 KiB  81.8 KiB/s 00:00 [######################] 100%[1E Total ( 75/145)        43.3 MiB   923 KiB/s 00:03 [####################--]  93%[1F python-luma-core...   111.8 KiB   170 KiB/s 00:01 [######################] 100%[1E gupnp-1:1.6.9-1-armv7h
+ Total ( 76/145)        43.3 MiB   923 KiB/s 00:03 [####################--]  93%
+[2F gupnp-1:1.6.9-1-...     6.9 KiB  0.00   B/s --:-- [#---------------------]   6% gupnp-1:1.6.9-1-...   110.5 KiB  3.00 MiB/s 00:00 [######################] 100%[1E python-dbus-1.4.0-1-armv7h
+ Total ( 77/145)        43.3 MiB   923 KiB/s 00:03 [####################--]  93%
+[2F python-dbus-1.4....     8.6 KiB  0.00   B/s --:-- [#---------------------]   7%[1E Total ( 77/145)        43.4 MiB   769 KiB/s 00:03 [####################--]  93%[1F python-dbus-1.4....   109.8 KiB  3.06 MiB/s 00:00 [######################] 100%[1E alsa-ucm-conf-1.2.14-2-any
+ Total ( 78/145)        43.4 MiB   769 KiB/s 00:03 [####################--]  93%
+[2F alsa-ucm-conf-1....    21.2 KiB  0.00   B/s --:-- [####------------------]  19% alsa-ucm-conf-1....   109.3 KiB  3.34 MiB/s 00:00 [######################] 100%[1E python-yarl-1.21.1-1-armv7h
+ Total ( 79/145)        43.4 MiB   769 KiB/s 00:03 [####################--]  93%
+[2F python-yarl-1.21...     0.0   B  0.00   B/s --:-- [----------------------]   0% python-yarl-1.21...   103.5 KiB  2.11 MiB/s 00:00 [######################] 100%[1E python-evdev-1.9.2-1-armv7h
+ Total ( 80/145)        43.4 MiB   769 KiB/s 00:03 [####################--]  93%
+[2F python-evdev-1.9...     2.8 KiB  0.00   B/s --:-- [----------------------]   2%[1E Total ( 80/145)        43.7 MiB   986 KiB/s 00:02 [####################--]  94%[1F python-evdev-1.9...   103.3 KiB  2.29 MiB/s 00:00 [######################] 100%[1E python-pyopenssl-25.2.0-1-any
+ Total ( 81/145)        43.7 MiB   986 KiB/s 00:02 [####################--]  94%
+[2F python-pyopenssl...     5.5 KiB  0.00   B/s --:-- [#---------------------]   5% python-pyopenssl...   102.0 KiB  1121 KiB/s 00:00 [######################] 100%[1E python-qrcode-8.2-1-any
+ Total ( 82/145)        43.7 MiB   986 KiB/s 00:02 [####################--]  94%
+[2F python-qrcode-8....    20.8 KiB  0.00   B/s --:-- [####------------------]  22%[1E Total ( 82/145)        44.0 MiB  1114 KiB/s 00:02 [####################--]  95%[1F python-qrcode-8....    93.3 KiB  2.53 MiB/s 00:00 [######################] 100%[1E dconf-0.40.0-3-armv7h
+ Total ( 83/145)        44.0 MiB  1114 KiB/s 00:02 [####################--]  95%
+[2F dconf-0.40.0-3-a...    11.1 KiB  0.00   B/s --:-- [##--------------------]  12% dconf-0.40.0-3-a...    92.3 KiB  2.05 MiB/s 00:00 [######################] 100%[1E python-pyusb-1.3.1-1-any
+ Total ( 84/145)        44.0 MiB  1114 KiB/s 00:02 [####################--]  95%
+[2F python-pyusb-1.3...     5.5 KiB  0.00   B/s --:-- [#---------------------]   6% python-pyusb-1.3...    92.1 KiB  2.50 MiB/s 00:00 [######################] 100%[1E libconfig-1.8.1-1-armv7h
+ Total ( 85/145)        44.0 MiB  1114 KiB/s 00:02 [####################--]  95%
+[2F libconfig-1.8.1-...    13.9 KiB  0.00   B/s --:-- [###-------------------]  16%[1E Total ( 85/145)        44.2 MiB  1078 KiB/s 00:01 [####################--]  95%[1F libconfig-1.8.1-...    84.7 KiB  2.30 MiB/s 00:00 [######################] 100%[1E python-cbor2-5.7.0-1-armv7h
+ Total ( 86/145)        44.2 MiB  1078 KiB/s 00:01 [####################--]  95%
+[2F python-cbor2-5.7...     8.3 KiB  0.00   B/s --:-- [##--------------------]  10% python-cbor2-5.7...    81.7 KiB  1900 KiB/s 00:00 [######################] 100%[1E python-idna-3.10-2-any
+ Total ( 87/145)        44.2 MiB  1078 KiB/s 00:01 [####################--]  95%
+[2F python-idna-3.10...     0.0   B  0.00   B/s --:-- [----------------------]   0% python-idna-3.10...    79.9 KiB  1537 KiB/s 00:00 [######################] 100%[1E python-parsedatetime-2.6-10-any
+ Total ( 88/145)        44.2 MiB  1078 KiB/s 00:01 [####################--]  95%
+[2F python-parsedate...     9.7 KiB  0.00   B/s --:-- [##--------------------]  13%[1E Total ( 88/145)        44.4 MiB  1062 KiB/s 00:01 [#####################-]  96%[1F python-parsedate...    72.9 KiB  1696 KiB/s 00:00 [######################] 100%[1E python-systemd-235-4-armv7h
+ Total ( 89/145)        44.4 MiB  1062 KiB/s 00:01 [#####################-]  96%
+[2F python-systemd-2...    23.6 KiB  0.00   B/s --:-- [#######---------------]  33% python-systemd-2...    70.4 KiB  1759 KiB/s 00:00 [######################] 100%[1E graphite-1:1.3.14-5-armv7h
+ Total ( 90/145)        44.4 MiB  1062 KiB/s 00:01 [#####################-]  96%
+[2F graphite-1:1.3.1...    15.3 KiB  0.00   B/s --:-- [####------------------]  22% graphite-1:1.3.1...    67.9 KiB  1885 KiB/s 00:00 [######################] 100%[1E fribidi-1.0.16-2-armv7h
+ Total ( 91/145)        44.4 MiB  1062 KiB/s 00:01 [#####################-]  96%
+[2F fribidi-1.0.16-2...    22.2 KiB  0.00   B/s --:-- [#######---------------]  33%[1E Total ( 91/145)        44.7 MiB   956 KiB/s 00:01 [#####################-]  96%[1F fribidi-1.0.16-2...    66.9 KiB   735 KiB/s 00:00 [######################] 100%[1E python-pyrad-2.4.1-6-any
+ Total ( 92/145)        44.7 MiB   956 KiB/s 00:01 [#####################-]  96%
+[2F python-pyrad-2.4...    15.7 KiB  0.00   B/s --:-- [#####-----------------]  23%[1E Total ( 92/145)        44.7 MiB   685 KiB/s 00:02 [#####################-]  96%[1F python-pyrad-2.4...    66.0 KiB   134 KiB/s 00:00 [######################] 100%[1E python-wheel-0.45.1-1-any
+ Total ( 93/145)        44.7 MiB   685 KiB/s 00:02 [#####################-]  96%
+[2F python-wheel-0.4...    12.5 KiB  0.00   B/s --:-- [####------------------]  19%[1E Total ( 93/145)        44.8 MiB   515 KiB/s 00:02 [#####################-]  96%[1F python-wheel-0.4...    62.9 KiB  1747 KiB/s 00:00 [######################] 100%[1E python-josepy-2.1.0-1-any
+ Total ( 94/145)        44.8 MiB   515 KiB/s 00:02 [#####################-]  96%
+[2F python-josepy-2....    11.1 KiB  0.00   B/s --:-- [###-------------------]  18% python-josepy-2....    60.9 KiB   458 KiB/s 00:00 [######################] 100%[1E python-multidict-6.6.4-1-armv7h
+ Total ( 95/145)        44.8 MiB   515 KiB/s 00:02 [#####################-]  96%
+[2F python-multidict...    12.5 KiB  0.00   B/s --:-- [####------------------]  20%[1E Total ( 95/145)        44.9 MiB   423 KiB/s 00:03 [#####################-]  97%[1F python-multidict...    59.7 KiB  1658 KiB/s 00:00 [######################] 100%[1E python-periphery-2.3.0-6-any
+ Total ( 96/145)        44.9 MiB   423 KiB/s 00:03 [#####################-]  97%
+[2F python-periphery...    15.7 KiB  0.00   B/s --:-- [######----------------]  28%[1E Total ( 96/145)        45.0 MiB   379 KiB/s 00:03 [#####################-]  97%[1F python-periphery...    56.1 KiB   168 KiB/s 00:00 [######################] 100%[1E python-wrapt-1.17.3-1-armv7h
+ Total ( 97/145)        45.0 MiB   379 KiB/s 00:03 [#####################-]  97%
+[2F python-wrapt-1.1...    12.5 KiB  0.00   B/s --:-- [#####-----------------]  24%[1E Total ( 97/145)        45.0 MiB   296 KiB/s 00:04 [#####################-]  97%[1F python-wrapt-1.1...    50.0 KiB   769 KiB/s 00:00 [######################] 100%[1E gssdp-1.6.4-1-armv7h
+ Total ( 98/145)        45.0 MiB   296 KiB/s 00:04 [#####################-]  97%
+[2F gssdp-1.6.4-1-armv7h   17.1 KiB  0.00   B/s --:-- [#######---------------]  35% gssdp-1.6.4-1-armv7h   48.8 KiB  1220 KiB/s 00:00 [######################] 100%[1E python-hidapi-0.14.0-4-armv7h
+ Total ( 99/145)        45.0 MiB   296 KiB/s 00:04 [#####################-]  97%
+[2F python-hidapi-0....    11.4 KiB  0.00   B/s --:-- [#####-----------------]  24% python-hidapi-0....    47.3 KiB  1050 KiB/s 00:00 [######################] 100%[1E python-luma-oled-3.13.0-3-any
+ Total (100/145)        45.0 MiB   296 KiB/s 00:04 [#####################-]  97%
+[2F python-luma-oled...    31.7 KiB  0.00   B/s --:-- [##############--------]  67%[1E Total (100/145)        45.2 MiB   324 KiB/s 00:03 [#####################-]  97%[1F python-luma-oled...    46.9 KiB   142 KiB/s 00:00 [######################] 100%[1E jbigkit-2.1-8-armv7h
+ Total (101/145)        45.2 MiB   324 KiB/s 00:03 [#####################-]  97%
+[2F jbigkit-2.1-8-armv7h   11.3 KiB  0.00   B/s --:-- [#####-----------------]  25%[1E Total (101/145)        45.2 MiB   241 KiB/s 00:04 [#####################-]  97%[1F jbigkit-2.1-8-armv7h   44.6 KiB  1240 KiB/s 00:00 [######################] 100%[1E python-pytz-2025.2-1-any
+ Total (102/145)        45.2 MiB   241 KiB/s 00:04 [#####################-]  97%
+[2F python-pytz-2025...     6.9 KiB  0.00   B/s --:-- [###-------------------]  15% python-pytz-2025...    44.1 KiB  1191 KiB/s 00:00 [######################] 100%[1E python-configargparse-1.5.5-3-any
+ Total (103/145)        45.2 MiB   241 KiB/s 00:04 [#####################-]  97%
+[2F python-configarg...    12.5 KiB  0.00   B/s --:-- [######----------------]  28% python-configarg...    43.6 KiB  1179 KiB/s 00:00 [######################] 100%[1E libmd-1.1.0-2-armv7h
+ Total (104/145)        45.2 MiB   241 KiB/s 00:04 [#####################-]  97%
+[2F libmd-1.1.0-2-armv7h   10.0 KiB  0.00   B/s --:-- [#####-----------------]  23%[1E Total (104/145)        45.3 MiB   349 KiB/s 00:02 [#####################-]  98%[1F libmd-1.1.0-2-armv7h   42.9 KiB   894 KiB/s 00:00 [######################] 100%[1E libsrtp-1:2.7.0-1-armv7h
+ Total (105/145)        45.3 MiB   349 KiB/s 00:02 [#####################-]  98%
+[2F libsrtp-1:2.7.0-...    19.8 KiB  0.00   B/s --:-- [##########------------]  47% libsrtp-1:2.7.0-...    41.3 KiB  1116 KiB/s 00:00 [######################] 100%[1E python-frozenlist-1.7.0-1-armv7h
+ Total (106/145)        45.3 MiB   349 KiB/s 00:02 [#####################-]  98%
+[2F python-frozenlis...     4.3 KiB  0.00   B/s --:-- [##--------------------]  10% python-frozenlis...    40.5 KiB   989 KiB/s 00:00 [######################] 100%[1E hidapi-0.15.0-1-armv7h
+ Total (107/145)        45.3 MiB   349 KiB/s 00:02 [#####################-]  98%
+[2F hidapi-0.15.0-1-...    12.5 KiB  0.00   B/s --:-- [#######---------------]  32%[1E Total (107/145)        45.5 MiB   396 KiB/s 00:01 [#####################-]  98%[1F hidapi-0.15.0-1-...    38.3 KiB   798 KiB/s 00:00 [######################] 100%[1E python-propcache-0.3.2-1-armv7h
+ Total (108/145)        45.5 MiB   396 KiB/s 00:01 [#####################-]  98%
+[2F python-propcache...     0.0   B  0.00   B/s --:-- [----------------------]   0% python-propcache...    37.9 KiB   716 KiB/s 00:00 [######################] 100%[1E python-distro-1.9.0-3-any
+ Total (109/145)        45.5 MiB   396 KiB/s 00:01 [#####################-]  98%
+[2F python-distro-1....     0.0   B  0.00   B/s --:-- [----------------------]   0%[1E Total (109/145)        45.5 MiB   398 KiB/s 00:01 [#####################-]  98%[1F python-distro-1....    35.5 KiB   335 KiB/s 00:00 [######################] 100%[1E python-platformdirs-4.4.0-1-any
+ Total (110/145)        45.5 MiB   398 KiB/s 00:01 [#####################-]  98%
+[2F python-platformd...     5.7 KiB  0.00   B/s --:-- [###-------------------]  17% python-platformd...    31.7 KiB   341 KiB/s 00:00 [######################] 100%[1E run-parts-5.23.1-1-armv7h
+ Total (111/145)        45.5 MiB   398 KiB/s 00:01 [#####################-]  98%
+[2F run-parts-5.23.1...    11.4 KiB  0.00   B/s --:-- [#######---------------]  36%[1E Total (111/145)        45.6 MiB   354 KiB/s 00:01 [#####################-]  98%[1F run-parts-5.23.1...    31.5 KiB   656 KiB/s 00:00 [######################] 100%[1E python-pyotp-2.9.0-3-any
+ Total (112/145)        45.6 MiB   354 KiB/s 00:01 [#####################-]  98%
+[2F python-pyotp-2.9...     2.9 KiB  0.00   B/s --:-- [#---------------------]   9% python-pyotp-2.9...    30.7 KiB   590 KiB/s 00:00 [######################] 100%[1E libraqm-0.10.3-1-armv7h
+ Total (113/145)        45.6 MiB   354 KiB/s 00:01 [#####################-]  98%
+[2F libraqm-0.10.3-1...    22.8 KiB  0.00   B/s --:-- [################------]  76% libraqm-0.10.3-1...    29.9 KiB   624 KiB/s 00:00 [######################] 100%[1E mailcap-2.1.54-2-any
+ Total (114/145)        45.6 MiB   354 KiB/s 00:01 [#####################-]  98%
+[2F mailcap-2.1.54-2-any    4.2 KiB  0.00   B/s --:-- [###-------------------]  14%[1E Total (114/145)        45.7 MiB   329 KiB/s 00:01 [#####################-]  98%[1F mailcap-2.1.54-2-any   28.5 KiB   375 KiB/s 00:00 [######################] 100%[1E python-filelock-3.19.1-1-any
+ Total (115/145)        45.7 MiB   329 KiB/s 00:01 [#####################-]  98%
+[2F python-filelock-...     8.6 KiB  0.00   B/s --:-- [######----------------]  31% python-filelock-...    27.0 KiB   751 KiB/s 00:00 [######################] 100%[1E llhttp-9.2.1-2-armv7h
+ Total (116/145)        45.7 MiB   329 KiB/s 00:01 [#####################-]  98%
+[2F llhttp-9.2.1-2-a...     7.1 KiB  0.00   B/s --:-- [#####-----------------]  26% llhttp-9.2.1-2-a...    26.5 KiB   737 KiB/s 00:00 [######################] 100%[1E gupnp-igd-1.6.0-2-armv7h
+ Total (117/145)        45.7 MiB   329 KiB/s 00:01 [#####################-]  98%
+[2F gupnp-igd-1.6.0-...    17.1 KiB  0.00   B/s --:-- [##############--------]  66%[1E Total (117/145)        45.8 MiB   350 KiB/s 00:01 [#####################-]  99%[1F gupnp-igd-1.6.0-...    25.7 KiB   642 KiB/s 00:00 [######################] 100%[1E python-six-1.17.0-1-any
+ Total (118/145)        45.8 MiB   350 KiB/s 00:01 [#####################-]  99%
+[2F python-six-1.17....     8.6 KiB  0.00   B/s --:-- [#######---------------]  33% python-six-1.17....    25.6 KiB   712 KiB/s 00:00 [######################] 100%[1E libproxy-0.5.11-1-armv7h
+ Total (119/145)        45.8 MiB   350 KiB/s 00:01 [#####################-]  99%
+[2F libproxy-0.5.11-...    17.1 KiB  0.00   B/s --:-- [##############--------]  67% libproxy-0.5.11-...    25.5 KiB   707 KiB/s 00:00 [######################] 100%[1E libxdmcp-1.1.5-1.1-armv7h
+ Total (120/145)        45.8 MiB   350 KiB/s 00:01 [#####################-]  99%
+[2F libxdmcp-1.1.5-1...     5.7 KiB  0.00   B/s --:-- [####------------------]  22%[1E Total (120/145)        45.8 MiB   336 KiB/s 00:01 [#####################-]  99%[1F libxdmcp-1.1.5-1...    25.0 KiB   625 KiB/s 00:00 [######################] 100%[1E python-aiofiles-24.1.0-2-any
+ Total (121/145)        45.8 MiB   336 KiB/s 00:01 [#####################-]  99%
+[2F python-aiofiles-...     2.9 KiB  0.00   B/s --:-- [##--------------------]  11% python-aiofiles-...    25.0 KiB   520 KiB/s 00:00 [######################] 100%[1E python-aiohappyeyeballs-2.6.1-1-any
+ Total (122/145)        45.8 MiB   336 KiB/s 00:01 [#####################-]  99%
+[2F python-aiohappye...    14.3 KiB  0.00   B/s --:-- [############----------]  59% python-aiohappye...    24.0 KiB   600 KiB/s 00:00 [######################] 100%[1E python-raspberry-gpio-0.7.1a4-5-armv7h
+ Total (123/145)        45.8 MiB   336 KiB/s 00:01 [#####################-]  99%
+[2F python-raspberry...    23.8 KiB  0.00   B/s 00:00 [######################] 100%[1E Total (123/145)        45.9 MiB   279 KiB/s 00:01 [#####################-]  99%[1F python-raspberry...    23.8 KiB  68.8 KiB/s 00:00 [######################] 100%[1E python-autocommand-2.2.2-7-any
+ Total (124/145)        45.9 MiB   279 KiB/s 00:01 [#####################-]  99%
+[2F python-autocomma...     8.6 KiB  0.00   B/s --:-- [#######---------------]  36%[1E Total (124/145)        45.9 MiB   197 KiB/s 00:01 [#####################-]  99%[1F python-autocomma...    23.2 KiB   580 KiB/s 00:00 [######################] 100%[1E python-jaraco.collections-5.1.0-1-any
+ Total (125/145)        45.9 MiB   197 KiB/s 00:01 [#####################-]  99%
+[2F python-jaraco.co...     5.7 KiB  0.00   B/s --:-- [#####-----------------]  25% python-jaraco.co...    22.6 KiB   628 KiB/s 00:00 [######################] 100%[1E python-jaraco.text-4.0.0-2-any
+ Total (126/145)        45.9 MiB   197 KiB/s 00:01 [#####################-]  99%
+[2F python-jaraco.te...     0.0   B  0.00   B/s --:-- [----------------------]   0% python-jaraco.te...    20.1 KiB   386 KiB/s 00:00 [######################] 100%[1E python-pam-2.0.2-5-any
+ Total (127/145)        45.9 MiB   197 KiB/s 00:01 [#####################-]  99%
+[2F python-pam-2.0.2...    14.3 KiB  0.00   B/s --:-- [###############-------]  72%[1E Total (127/145)        46.0 MiB   234 KiB/s 00:00 [#####################-]  99%[1F python-pam-2.0.2...    19.8 KiB   494 KiB/s 00:00 [######################] 100%[1E libpciaccess-0.18.1-2-armv7h
+ Total (128/145)        46.0 MiB   234 KiB/s 00:00 [#####################-]  99%
+[2F libpciaccess-0.1...     5.7 KiB  0.00   B/s --:-- [######----------------]  30% libpciaccess-0.1...    18.7 KiB   520 KiB/s 00:00 [######################] 100%[1E python-smbus2-0.4.3-3-any
+ Total (129/145)        46.0 MiB   234 KiB/s 00:00 [#####################-]  99%
+[2F python-smbus2-0....    17.6 KiB  0.00   B/s 00:00 [######################] 100%[1E Total (129/145)        46.0 MiB   188 KiB/s 00:00 [#####################-]  99%[1F python-smbus2-0....    17.6 KiB  53.8 KiB/s 00:00 [######################] 100%[1E python-jaraco.functools-4.1.0-1-any
+ Total (130/145)        46.0 MiB   188 KiB/s 00:00 [#####################-]  99%
+[2F python-jaraco.fu...     5.7 KiB  0.00   B/s --:-- [#######---------------]  32% python-jaraco.fu...    17.3 KiB   480 KiB/s 00:00 [######################] 100%[1E python-deprecated-1.2.18-1-any
+ Total (131/145)        46.0 MiB   188 KiB/s 00:00 [#####################-]  99%
+[2F python-deprecate...     5.7 KiB  0.00   B/s --:-- [#######---------------]  36%[1E Total (131/145)        46.1 MiB   155 KiB/s 00:01 [#####################-]  99%[1F python-deprecate...    15.5 KiB   484 KiB/s 00:00 [######################] 100%[1E python-pyserial-asyncio-0.6-6-any
+ Total (132/145)        46.1 MiB   155 KiB/s 00:01 [#####################-]  99%
+[2F python-pyserial-...    15.2 KiB  0.00   B/s 00:00 [######################] 100%[1E Total (132/145)        46.1 MiB   144 KiB/s 00:00 [#####################-]  99%[1F python-pyserial-...    15.2 KiB  88.5 KiB/s 00:00 [######################] 100%[1E python-setproctitle-1.3.7-1-armv7h
+ Total (133/145)        46.1 MiB   144 KiB/s 00:00 [#####################-]  99%
+[2F python-setprocti...    12.5 KiB  0.00   B/s --:-- [###################---]  88%[1E Total (133/145)        46.1 MiB   117 KiB/s 00:01 [#####################-]  99%[1F python-setprocti...    14.0 KiB   438 KiB/s 00:00 [######################] 100%[1E python-async-lru-2.0.5-1-any
+ Total (134/145)        46.1 MiB   117 KiB/s 00:01 [#####################-]  99%
+[2F python-async-lru...     5.7 KiB  0.00   B/s --:-- [#########-------------]  41% python-async-lru...    13.9 KiB   433 KiB/s 00:00 [######################] 100%[1E alsa-topology-conf-1.2.5.1-4-any
+ Total (135/145)        46.1 MiB   117 KiB/s 00:01 [#####################-]  99%
+[2F alsa-topology-co...    13.2 KiB  0.00   B/s 00:00 [######################] 100% alsa-topology-co...    13.2 KiB   330 KiB/s 00:00 [######################] 100%[1E python-jaraco.context-6.0.1-1-any
+ Total (136/145)        46.1 MiB   117 KiB/s 00:01 [#####################-]  99%
+[2F python-jaraco.co...     8.6 KiB  0.00   B/s --:-- [##############--------]  66% python-jaraco.co...    12.9 KiB   358 KiB/s 00:00 [######################] 100%[1E python-spidev-3.6-6-armv7h
+ Total (137/145)        46.1 MiB   117 KiB/s 00:01 [#####################-]  99%
+[2F python-spidev-3....    12.7 KiB  0.00   B/s 00:00 [######################] 100%[1E Total (137/145)        46.2 MiB   124 KiB/s 00:00 [#####################-]  99%[1F python-spidev-3....    12.7 KiB  75.7 KiB/s 00:00 [######################] 100%[1E python-netifaces-0.11.0-7-armv7h
+ Total (138/145)        46.2 MiB   124 KiB/s 00:00 [#####################-]  99%
+[2F python-netifaces...     5.7 KiB  0.00   B/s --:-- [##########------------]  46%[1E Total (138/145)        46.2 MiB  91.7 KiB/s 00:00 [#####################-]  99%[1F python-netifaces...    12.2 KiB   276 KiB/s 00:00 [######################] 100%[1E hicolor-icon-theme-0.18-1-any
+ Total (139/145)        46.2 MiB  91.7 KiB/s 00:00 [#####################-]  99%
+[2F hicolor-icon-the...     8.6 KiB  0.00   B/s --:-- [###############-------]  70% hicolor-icon-the...    12.1 KiB   303 KiB/s 00:00 [######################] 100%[1E python-aiosignal-1.4.0-1-any
+ Total (140/145)        46.2 MiB  91.7 KiB/s 00:00 [#####################-]  99%
+[2F python-aiosignal...    11.5 KiB  0.00   B/s 00:00 [######################] 100% python-aiosignal...    11.5 KiB   359 KiB/s 00:00 [######################] 100%[1E python-pyrfc3339-1.1-14-any
+ Total (141/145)        46.2 MiB  91.7 KiB/s 00:00 [#####################-]  99%
+[2F python-pyrfc3339...     8.6 KiB  0.00   B/s --:-- [################------]  75%[1E Total (141/145)        46.2 MiB   115 KiB/s 00:00 [#####################-]  99%[1F python-pyrfc3339...    11.3 KiB   314 KiB/s 00:00 [######################] 100%[1E libxau-1.0.12-1-armv7h
+ Total (142/145)        46.2 MiB   115 KiB/s 00:00 [#####################-]  99%
+[2F libxau-1.0.12-1-...     4.2 KiB  0.00   B/s --:-- [########--------------]  39% libxau-1.0.12-1-...    10.6 KiB   264 KiB/s 00:00 [######################] 100%[1E gsettings-system-schemas-48.0-1-any
+ Total (143/145)        46.2 MiB   115 KiB/s 00:00 [#####################-]  99%
+[2F gsettings-system...     5.8 KiB  0.00   B/s 00:00 [######################] 100% gsettings-system...     5.8 KiB   181 KiB/s 00:00 [######################] 100%[1E raspberrypi-io-access-0.7-1-any
+ Total (144/145)        46.2 MiB   115 KiB/s 00:00 [#####################-]  99%
+[2F raspberrypi-io-a...     3.5 KiB  0.00   B/s 00:00 [######################] 100%[1E Total (144/145)        46.2 MiB  98.4 KiB/s 00:00 [######################] 100%[1F raspberrypi-io-a...     3.5 KiB  21.9 KiB/s 00:00 [######################] 100%[1E Total (145/145)        46.2 MiB  1680 KiB/s 00:28 [######################] 100%
+(  0/145) checking keys in keyring                 [----------------------]   0%(  1/145) checking keys in keyring                 [----------------------]   0%(  2/145) checking keys in keyring                 [----------------------]   1%(  3/145) checking keys in keyring                 [----------------------]   2%(  4/145) checking keys in keyring                 [----------------------]   2%(  5/145) checking keys in keyring                 [----------------------]   3%(  6/145) checking keys in keyring                 [----------------------]   4%(  7/145) checking keys in keyring                 [----------------------]   4%(  8/145) checking keys in keyring                 [#---------------------]   5%(  9/145) checking keys in keyring                 [#---------------------]   6%( 10/145) checking keys in keyring                 [#---------------------]   6%( 11/145) checking keys in keyring                 [#---------------------]   7%( 12/145) checking keys in keyring                 [#---------------------]   8%( 13/145) checking keys in keyring                 [#---------------------]   8%( 14/145) checking keys in keyring                 [#---------------------]   9%( 15/145) checking keys in keyring                 [##--------------------]  10%( 16/145) checking keys in keyring                 [##--------------------]  11%( 17/145) checking keys in keyring                 [##--------------------]  11%( 18/145) checking keys in keyring                 [##--------------------]  12%( 19/145) checking keys in keyring                 [##--------------------]  13%( 20/145) checking keys in keyring                 [##--------------------]  13%( 21/145) checking keys in keyring                 [###-------------------]  14%( 22/145) checking keys in keyring                 [###-------------------]  15%( 23/145) checking keys in keyring                 [###-------------------]  15%( 24/145) checking keys in keyring                 [###-------------------]  16%( 25/145) checking keys in keyring                 [###-------------------]  17%( 26/145) checking keys in keyring                 [###-------------------]  17%( 27/145) checking keys in keyring                 [###-------------------]  18%( 28/145) checking keys in keyring                 [####------------------]  19%( 29/145) checking keys in keyring                 [####------------------]  20%( 30/145) checking keys in keyring                 [####------------------]  20%( 31/145) checking keys in keyring                 [####------------------]  21%( 32/145) checking keys in keyring                 [####------------------]  22%( 33/145) checking keys in keyring                 [####------------------]  22%( 34/145) checking keys in keyring                 [#####-----------------]  23%( 35/145) checking keys in keyring                 [#####-----------------]  24%( 36/145) checking keys in keyring                 [#####-----------------]  24%( 37/145) checking keys in keyring                 [#####-----------------]  25%( 38/145) checking keys in keyring                 [#####-----------------]  26%( 39/145) checking keys in keyring                 [#####-----------------]  26%( 40/145) checking keys in keyring                 [#####-----------------]  27%( 41/145) checking keys in keyring                 [######----------------]  28%( 42/145) checking keys in keyring                 [######----------------]  28%( 43/145) checking keys in keyring                 [######----------------]  29%( 44/145) checking keys in keyring                 [######----------------]  30%( 45/145) checking keys in keyring                 [######----------------]  31%( 46/145) checking keys in keyring                 [######----------------]  31%( 47/145) checking keys in keyring                 [#######---------------]  32%( 48/145) checking keys in keyring                 [#######---------------]  33%( 49/145) checking keys in keyring                 [#######---------------]  33%( 50/145) checking keys in keyring                 [#######---------------]  34%( 51/145) checking keys in keyring                 [#######---------------]  35%( 52/145) checking keys in keyring                 [#######---------------]  35%( 53/145) checking keys in keyring                 [#######---------------]  36%( 54/145) checking keys in keyring                 [########--------------]  37%( 55/145) checking keys in keyring                 [########--------------]  37%( 56/145) checking keys in keyring                 [########--------------]  38%( 57/145) checking keys in keyring                 [########--------------]  39%( 58/145) checking keys in keyring                 [########--------------]  40%( 59/145) checking keys in keyring                 [########--------------]  40%( 60/145) checking keys in keyring                 [#########-------------]  41%( 61/145) checking keys in keyring                 [#########-------------]  42%( 62/145) checking keys in keyring                 [#########-------------]  42%( 63/145) checking keys in keyring                 [#########-------------]  43%( 64/145) checking keys in keyring                 [#########-------------]  44%( 65/145) checking keys in keyring                 [#########-------------]  44%( 66/145) checking keys in keyring                 [#########-------------]  45%( 67/145) checking keys in keyring                 [##########------------]  46%( 68/145) checking keys in keyring                 [##########------------]  46%( 69/145) checking keys in keyring                 [##########------------]  47%( 70/145) checking keys in keyring                 [##########------------]  48%( 71/145) checking keys in keyring                 [##########------------]  48%( 72/145) checking keys in keyring                 [##########------------]  49%( 73/145) checking keys in keyring                 [###########-----------]  50%( 74/145) checking keys in keyring                 [###########-----------]  51%( 75/145) checking keys in keyring                 [###########-----------]  51%( 76/145) checking keys in keyring                 [###########-----------]  52%( 77/145) checking keys in keyring                 [###########-----------]  53%( 78/145) checking keys in keyring                 [###########-----------]  53%( 79/145) checking keys in keyring                 [###########-----------]  54%( 80/145) checking keys in keyring                 [############----------]  55%( 81/145) checking keys in keyring                 [############----------]  55%( 82/145) checking keys in keyring                 [############----------]  56%( 83/145) checking keys in keyring                 [############----------]  57%( 84/145) checking keys in keyring                 [############----------]  57%( 85/145) checking keys in keyring                 [############----------]  58%( 86/145) checking keys in keyring                 [############----------]  59%( 87/145) checking keys in keyring                 [#############---------]  60%( 88/145) checking keys in keyring                 [#############---------]  60%( 89/145) checking keys in keyring                 [#############---------]  61%( 90/145) checking keys in keyring                 [#############---------]  62%( 91/145) checking keys in keyring                 [#############---------]  62%( 92/145) checking keys in keyring                 [#############---------]  63%( 93/145) checking keys in keyring                 [##############--------]  64%( 94/145) checking keys in keyring                 [##############--------]  64%( 95/145) checking keys in keyring                 [##############--------]  65%( 96/145) checking keys in keyring                 [##############--------]  66%( 97/145) checking keys in keyring                 [##############--------]  66%( 98/145) checking keys in keyring                 [##############--------]  67%( 99/145) checking keys in keyring                 [##############--------]  68%(100/145) checking keys in keyring                 [##############--------]  68%(101/145) checking keys in keyring                 [###############-------]  69%(102/145) checking keys in keyring                 [###############-------]  70%(103/145) checking keys in keyring                 [###############-------]  71%(104/145) checking keys in keyring                 [###############-------]  71%(105/145) checking keys in keyring                 [###############-------]  72%(106/145) checking keys in keyring                 [################------]  73%(107/145) checking keys in keyring                 [################------]  73%(108/145) checking keys in keyring                 [################------]  74%(109/145) checking keys in keyring                 [################------]  75%(110/145) checking keys in keyring                 [################------]  75%(111/145) checking keys in keyring                 [################------]  76%(112/145) checking keys in keyring                 [################------]  77%(113/145) checking keys in keyring                 [################------]  77%(114/145) checking keys in keyring                 [#################-----]  78%(115/145) checking keys in keyring                 [#################-----]  79%(116/145) checking keys in keyring                 [#################-----]  80%(117/145) checking keys in keyring                 [#################-----]  80%(118/145) checking keys in keyring                 [#################-----]  81%(119/145) checking keys in keyring                 [##################----]  82%(120/145) checking keys in keyring                 [##################----]  82%(121/145) checking keys in keyring                 [##################----]  83%(122/145) checking keys in keyring                 [##################----]  84%(123/145) checking keys in keyring                 [##################----]  84%(124/145) checking keys in keyring                 [##################----]  85%(125/145) checking keys in keyring                 [##################----]  86%(126/145) checking keys in keyring                 [##################----]  86%(127/145) checking keys in keyring                 [###################---]  87%(128/145) checking keys in keyring                 [###################---]  88%(129/145) checking keys in keyring                 [###################---]  88%(130/145) checking keys in keyring                 [###################---]  89%(131/145) checking keys in keyring                 [###################---]  90%(132/145) checking keys in keyring                 [####################--]  91%(133/145) checking keys in keyring                 [####################--]  91%(134/145) checking keys in keyring                 [####################--]  92%(135/145) checking keys in keyring                 [####################--]  93%(136/145) checking keys in keyring                 [####################--]  93%(137/145) checking keys in keyring                 [####################--]  94%(138/145) checking keys in keyring                 [####################--]  95%(139/145) checking keys in keyring                 [####################--]  95%(140/145) checking keys in keyring                 [#####################-]  96%(141/145) checking keys in keyring                 [#####################-]  97%(142/145) checking keys in keyring                 [#####################-]  97%(143/145) checking keys in keyring                 [#####################-]  98%(144/145) checking keys in keyring                 [#####################-]  99%(145/145) checking keys in keyring                 [######################] 100%
+(  0/145) checking package integrity               [----------------------]   0%(  1/145) checking package integrity               [----------------------]   0%(  2/145) checking package integrity               [----------------------]   0%(  3/145) checking package integrity               [----------------------]   3%(  4/145) checking package integrity               [----------------------]   3%(  5/145) checking package integrity               [----------------------]   3%(  6/145) checking package integrity               [----------------------]   3%(  7/145) checking package integrity               [----------------------]   3%(  8/145) checking package integrity               [----------------------]   3%(  9/145) checking package integrity               [----------------------]   4%( 10/145) checking package integrity               [----------------------]   4%( 11/145) checking package integrity               [----------------------]   4%( 12/145) checking package integrity               [----------------------]   4%( 13/145) checking package integrity               [----------------------]   4%( 14/145) checking package integrity               [#---------------------]   5%( 15/145) checking package integrity               [#---------------------]   6%( 16/145) checking package integrity               [#---------------------]   7%( 17/145) checking package integrity               [#---------------------]   8%( 18/145) checking package integrity               [#---------------------]   9%( 19/145) checking package integrity               [#---------------------]   9%( 20/145) checking package integrity               [#---------------------]   9%( 21/145) checking package integrity               [##--------------------]  10%( 22/145) checking package integrity               [##--------------------]  12%( 23/145) checking package integrity               [###-------------------]  16%( 24/145) checking package integrity               [###-------------------]  16%( 25/145) checking package integrity               [###-------------------]  17%( 26/145) checking package integrity               [###-------------------]  17%( 27/145) checking package integrity               [###-------------------]  18%( 28/145) checking package integrity               [###-------------------]  18%( 29/145) checking package integrity               [###-------------------]  18%( 30/145) checking package integrity               [###-------------------]  18%( 31/145) checking package integrity               [###-------------------]  18%( 32/145) checking package integrity               [####------------------]  19%( 33/145) checking package integrity               [####------------------]  19%( 34/145) checking package integrity               [####------------------]  19%( 35/145) checking package integrity               [####------------------]  19%( 36/145) checking package integrity               [####------------------]  20%( 37/145) checking package integrity               [####------------------]  20%( 38/145) checking package integrity               [#####-----------------]  23%( 39/145) checking package integrity               [#####-----------------]  23%( 40/145) checking package integrity               [#####-----------------]  27%( 41/145) checking package integrity               [#####-----------------]  27%( 42/145) checking package integrity               [######----------------]  29%( 43/145) checking package integrity               [######----------------]  29%( 44/145) checking package integrity               [######----------------]  29%( 45/145) checking package integrity               [######----------------]  30%( 46/145) checking package integrity               [######----------------]  31%( 47/145) checking package integrity               [######----------------]  31%( 48/145) checking package integrity               [######----------------]  31%( 49/145) checking package integrity               [######----------------]  31%( 50/145) checking package integrity               [######----------------]  31%( 51/145) checking package integrity               [######----------------]  31%( 52/145) checking package integrity               [######----------------]  31%( 53/145) checking package integrity               [#######---------------]  32%( 54/145) checking package integrity               [#######---------------]  32%( 55/145) checking package integrity               [#######---------------]  33%( 56/145) checking package integrity               [#######---------------]  33%( 57/145) checking package integrity               [#######---------------]  34%( 58/145) checking package integrity               [#######---------------]  34%( 59/145) checking package integrity               [#######---------------]  34%( 60/145) checking package integrity               [#######---------------]  34%( 61/145) checking package integrity               [#######---------------]  34%( 62/145) checking package integrity               [#######---------------]  34%( 63/145) checking package integrity               [#######---------------]  35%( 64/145) checking package integrity               [#######---------------]  35%( 65/145) checking package integrity               [#######---------------]  36%( 66/145) checking package integrity               [#######---------------]  36%( 67/145) checking package integrity               [#######---------------]  36%( 68/145) checking package integrity               [#######---------------]  36%( 69/145) checking package integrity               [#######---------------]  36%( 70/145) checking package integrity               [########--------------]  37%( 71/145) checking package integrity               [########--------------]  38%( 72/145) checking package integrity               [########--------------]  38%( 73/145) checking package integrity               [#########-------------]  42%( 74/145) checking package integrity               [#########-------------]  43%( 75/145) checking package integrity               [#########-------------]  43%( 76/145) checking package integrity               [#########-------------]  44%( 77/145) checking package integrity               [##########------------]  46%( 78/145) checking package integrity               [##########------------]  46%( 79/145) checking package integrity               [##########------------]  46%( 80/145) checking package integrity               [##########------------]  47%( 81/145) checking package integrity               [##########------------]  49%( 82/145) checking package integrity               [##########------------]  49%( 83/145) checking package integrity               [###########-----------]  51%( 84/145) checking package integrity               [###########-----------]  51%( 85/145) checking package integrity               [###########-----------]  51%( 86/145) checking package integrity               [###########-----------]  52%( 87/145) checking package integrity               [###########-----------]  52%( 88/145) checking package integrity               [###########-----------]  52%( 89/145) checking package integrity               [###########-----------]  54%( 90/145) checking package integrity               [############----------]  56%( 91/145) checking package integrity               [############----------]  56%( 92/145) checking package integrity               [############----------]  56%( 93/145) checking package integrity               [############----------]  56%( 94/145) checking package integrity               [############----------]  56%( 95/145) checking package integrity               [############----------]  56%( 96/145) checking package integrity               [############----------]  57%( 97/145) checking package integrity               [############----------]  57%( 98/145) checking package integrity               [############----------]  57%( 99/145) checking package integrity               [############----------]  57%(100/145) checking package integrity               [############----------]  58%(101/145) checking package integrity               [############----------]  58%(102/145) checking package integrity               [############----------]  58%(103/145) checking package integrity               [############----------]  59%(104/145) checking package integrity               [#############---------]  60%(105/145) checking package integrity               [#############---------]  60%(106/145) checking package integrity               [#############---------]  60%(107/145) checking package integrity               [##############--------]  65%(108/145) checking package integrity               [##############--------]  65%(109/145) checking package integrity               [##############--------]  65%(110/145) checking package integrity               [##############--------]  66%(111/145) checking package integrity               [##############--------]  67%(112/145) checking package integrity               [###############-------]  72%(113/145) checking package integrity               [###############-------]  72%(114/145) checking package integrity               [################------]  75%(115/145) checking package integrity               [################------]  75%(116/145) checking package integrity               [################------]  75%(117/145) checking package integrity               [################------]  76%(118/145) checking package integrity               [################------]  76%(119/145) checking package integrity               [################------]  76%(120/145) checking package integrity               [################------]  76%(121/145) checking package integrity               [################------]  76%(122/145) checking package integrity               [################------]  76%(123/145) checking package integrity               [################------]  76%(124/145) checking package integrity               [################------]  76%(125/145) checking package integrity               [################------]  76%(126/145) checking package integrity               [################------]  76%(127/145) checking package integrity               [#################-----]  79%(128/145) checking package integrity               [#################-----]  79%(129/145) checking package integrity               [#################-----]  80%(130/145) checking package integrity               [#################-----]  80%(131/145) checking package integrity               [#################-----]  80%(132/145) checking package integrity               [#################-----]  80%(133/145) checking package integrity               [#################-----]  80%(134/145) checking package integrity               [#################-----]  81%(135/145) checking package integrity               [#################-----]  81%(136/145) checking package integrity               [#################-----]  81%(137/145) checking package integrity               [##################----]  82%(138/145) checking package integrity               [####################--]  91%(139/145) checking package integrity               [####################--]  92%(140/145) checking package integrity               [####################--]  92%(141/145) checking package integrity               [####################--]  93%(142/145) checking package integrity               [####################--]  93%(143/145) checking package integrity               [####################--]  93%(144/145) checking package integrity               [#####################-]  97%(145/145) checking package integrity               [######################] 100%
+(  0/145) loading package files                    [----------------------]   0%(  1/145) loading package files                    [----------------------]   0%(  2/145) loading package files                    [----------------------]   0%(  3/145) loading package files                    [----------------------]   3%(  4/145) loading package files                    [----------------------]   3%(  5/145) loading package files                    [----------------------]   3%(  6/145) loading package files                    [----------------------]   3%(  7/145) loading package files                    [----------------------]   3%(  8/145) loading package files                    [----------------------]   3%(  9/145) loading package files                    [----------------------]   4%( 10/145) loading package files                    [----------------------]   4%( 11/145) loading package files                    [----------------------]   4%( 12/145) loading package files                    [----------------------]   4%( 13/145) loading package files                    [----------------------]   4%( 14/145) loading package files                    [#---------------------]   5%( 15/145) loading package files                    [#---------------------]   6%( 16/145) loading package files                    [#---------------------]   7%( 17/145) loading package files                    [#---------------------]   8%( 18/145) loading package files                    [#---------------------]   9%( 19/145) loading package files                    [#---------------------]   9%( 20/145) loading package files                    [#---------------------]   9%( 21/145) loading package files                    [##--------------------]  10%( 22/145) loading package files                    [##--------------------]  12%( 23/145) loading package files                    [###-------------------]  16%( 24/145) loading package files                    [###-------------------]  16%( 25/145) loading package files                    [###-------------------]  17%( 26/145) loading package files                    [###-------------------]  17%( 27/145) loading package files                    [###-------------------]  18%( 28/145) loading package files                    [###-------------------]  18%( 29/145) loading package files                    [###-------------------]  18%( 30/145) loading package files                    [###-------------------]  18%( 31/145) loading package files                    [###-------------------]  18%( 32/145) loading package files                    [####------------------]  19%( 33/145) loading package files                    [####------------------]  19%( 34/145) loading package files                    [####------------------]  19%( 35/145) loading package files                    [####------------------]  19%( 36/145) loading package files                    [####------------------]  20%( 37/145) loading package files                    [####------------------]  20%( 38/145) loading package files                    [#####-----------------]  23%( 39/145) loading package files                    [#####-----------------]  23%( 40/145) loading package files                    [#####-----------------]  27%( 41/145) loading package files                    [#####-----------------]  27%( 42/145) loading package files                    [######----------------]  29%( 43/145) loading package files                    [######----------------]  29%( 44/145) loading package files                    [######----------------]  29%( 45/145) loading package files                    [######----------------]  30%( 46/145) loading package files                    [######----------------]  31%( 47/145) loading package files                    [######----------------]  31%( 48/145) loading package files                    [######----------------]  31%( 49/145) loading package files                    [######----------------]  31%( 50/145) loading package files                    [######----------------]  31%( 51/145) loading package files                    [######----------------]  31%( 52/145) loading package files                    [######----------------]  31%( 53/145) loading package files                    [#######---------------]  32%( 54/145) loading package files                    [#######---------------]  32%( 55/145) loading package files                    [#######---------------]  33%( 56/145) loading package files                    [#######---------------]  33%( 57/145) loading package files                    [#######---------------]  34%( 58/145) loading package files                    [#######---------------]  34%( 59/145) loading package files                    [#######---------------]  34%( 60/145) loading package files                    [#######---------------]  34%( 61/145) loading package files                    [#######---------------]  34%( 62/145) loading package files                    [#######---------------]  34%( 63/145) loading package files                    [#######---------------]  35%( 64/145) loading package files                    [#######---------------]  35%( 65/145) loading package files                    [#######---------------]  36%( 66/145) loading package files                    [#######---------------]  36%( 67/145) loading package files                    [#######---------------]  36%( 68/145) loading package files                    [#######---------------]  36%( 69/145) loading package files                    [#######---------------]  36%( 70/145) loading package files                    [########--------------]  37%( 71/145) loading package files                    [########--------------]  38%( 72/145) loading package files                    [########--------------]  38%( 73/145) loading package files                    [#########-------------]  42%( 74/145) loading package files                    [#########-------------]  43%( 75/145) loading package files                    [#########-------------]  43%( 76/145) loading package files                    [#########-------------]  44%( 77/145) loading package files                    [##########------------]  46%( 78/145) loading package files                    [##########------------]  46%( 79/145) loading package files                    [##########------------]  46%( 80/145) loading package files                    [##########------------]  47%( 81/145) loading package files                    [##########------------]  49%( 82/145) loading package files                    [##########------------]  49%( 83/145) loading package files                    [###########-----------]  51%( 84/145) loading package files                    [###########-----------]  51%( 85/145) loading package files                    [###########-----------]  51%( 86/145) loading package files                    [###########-----------]  52%( 87/145) loading package files                    [###########-----------]  52%( 88/145) loading package files                    [###########-----------]  52%( 89/145) loading package files                    [###########-----------]  54%( 90/145) loading package files                    [############----------]  56%( 91/145) loading package files                    [############----------]  56%( 92/145) loading package files                    [############----------]  56%( 93/145) loading package files                    [############----------]  56%( 94/145) loading package files                    [############----------]  56%( 95/145) loading package files                    [############----------]  56%( 96/145) loading package files                    [############----------]  57%( 97/145) loading package files                    [############----------]  57%( 98/145) loading package files                    [############----------]  57%( 99/145) loading package files                    [############----------]  57%(100/145) loading package files                    [############----------]  58%(101/145) loading package files                    [############----------]  58%(102/145) loading package files                    [############----------]  58%(103/145) loading package files                    [############----------]  59%(104/145) loading package files                    [#############---------]  60%(105/145) loading package files                    [#############---------]  60%(106/145) loading package files                    [#############---------]  60%(107/145) loading package files                    [##############--------]  65%(108/145) loading package files                    [##############--------]  65%(109/145) loading package files                    [##############--------]  65%(110/145) loading package files                    [##############--------]  66%(111/145) loading package files                    [##############--------]  67%(112/145) loading package files                    [###############-------]  72%(113/145) loading package files                    [###############-------]  72%(114/145) loading package files                    [################------]  75%(115/145) loading package files                    [################------]  75%(116/145) loading package files                    [################------]  75%(117/145) loading package files                    [################------]  76%(118/145) loading package files                    [################------]  76%(119/145) loading package files                    [################------]  76%(120/145) loading package files                    [################------]  76%(121/145) loading package files                    [################------]  76%(122/145) loading package files                    [################------]  76%(123/145) loading package files                    [################------]  76%(124/145) loading package files                    [################------]  76%(125/145) loading package files                    [################------]  76%(126/145) loading package files                    [################------]  76%(127/145) loading package files                    [#################-----]  79%(128/145) loading package files                    [#################-----]  79%(129/145) loading package files                    [#################-----]  80%(130/145) loading package files                    [#################-----]  80%(131/145) loading package files                    [#################-----]  80%(132/145) loading package files                    [#################-----]  80%(133/145) loading package files                    [#################-----]  80%(134/145) loading package files                    [#################-----]  81%(135/145) loading package files                    [#################-----]  81%(136/145) loading package files                    [#################-----]  81%(137/145) loading package files                    [##################----]  82%(138/145) loading package files                    [####################--]  91%(139/145) loading package files                    [####################--]  92%(140/145) loading package files                    [####################--]  92%(141/145) loading package files                    [####################--]  93%(142/145) loading package files                    [####################--]  93%(143/145) loading package files                    [####################--]  93%(144/145) loading package files                    [#####################-]  97%(145/145) loading package files                    [######################] 100%
+(  0/145) checking for file conflicts              [----------------------]   0%(  1/145) checking for file conflicts              [----------------------]   0%(  2/145) checking for file conflicts              [----------------------]   1%(  3/145) checking for file conflicts              [----------------------]   2%(  4/145) checking for file conflicts              [----------------------]   2%(  5/145) checking for file conflicts              [----------------------]   3%(  6/145) checking for file conflicts              [----------------------]   4%(  7/145) checking for file conflicts              [----------------------]   4%(  8/145) checking for file conflicts              [#---------------------]   5%(  9/145) checking for file conflicts              [#---------------------]   6%( 10/145) checking for file conflicts              [#---------------------]   6%( 11/145) checking for file conflicts              [#---------------------]   7%( 12/145) checking for file conflicts              [#---------------------]   8%( 13/145) checking for file conflicts              [#---------------------]   8%( 14/145) checking for file conflicts              [#---------------------]   9%( 15/145) checking for file conflicts              [##--------------------]  10%( 16/145) checking for file conflicts              [##--------------------]  11%( 17/145) checking for file conflicts              [##--------------------]  11%( 18/145) checking for file conflicts              [##--------------------]  12%( 19/145) checking for file conflicts              [##--------------------]  13%( 20/145) checking for file conflicts              [##--------------------]  13%( 21/145) checking for file conflicts              [###-------------------]  14%( 22/145) checking for file conflicts              [###-------------------]  15%( 23/145) checking for file conflicts              [###-------------------]  15%( 24/145) checking for file conflicts              [###-------------------]  16%( 25/145) checking for file conflicts              [###-------------------]  17%( 26/145) checking for file conflicts              [###-------------------]  17%( 27/145) checking for file conflicts              [###-------------------]  18%( 28/145) checking for file conflicts              [####------------------]  19%( 29/145) checking for file conflicts              [####------------------]  20%( 30/145) checking for file conflicts              [####------------------]  20%( 31/145) checking for file conflicts              [####------------------]  21%( 32/145) checking for file conflicts              [####------------------]  22%( 33/145) checking for file conflicts              [####------------------]  22%( 34/145) checking for file conflicts              [#####-----------------]  23%( 35/145) checking for file conflicts              [#####-----------------]  24%( 36/145) checking for file conflicts              [#####-----------------]  24%( 37/145) checking for file conflicts              [#####-----------------]  25%( 38/145) checking for file conflicts              [#####-----------------]  26%( 39/145) checking for file conflicts              [#####-----------------]  26%( 40/145) checking for file conflicts              [#####-----------------]  27%( 41/145) checking for file conflicts              [######----------------]  28%( 42/145) checking for file conflicts              [######----------------]  28%( 43/145) checking for file conflicts              [######----------------]  29%( 44/145) checking for file conflicts              [######----------------]  30%( 45/145) checking for file conflicts              [######----------------]  31%( 46/145) checking for file conflicts              [######----------------]  31%( 47/145) checking for file conflicts              [#######---------------]  32%( 48/145) checking for file conflicts              [#######---------------]  33%( 49/145) checking for file conflicts              [#######---------------]  33%( 50/145) checking for file conflicts              [#######---------------]  34%( 51/145) checking for file conflicts              [#######---------------]  35%( 52/145) checking for file conflicts              [#######---------------]  35%( 53/145) checking for file conflicts              [#######---------------]  36%( 54/145) checking for file conflicts              [########--------------]  37%( 55/145) checking for file conflicts              [########--------------]  37%( 56/145) checking for file conflicts              [########--------------]  38%( 57/145) checking for file conflicts              [########--------------]  39%( 58/145) checking for file conflicts              [########--------------]  40%( 59/145) checking for file conflicts              [########--------------]  40%( 60/145) checking for file conflicts              [#########-------------]  41%( 61/145) checking for file conflicts              [#########-------------]  42%( 62/145) checking for file conflicts              [#########-------------]  42%( 63/145) checking for file conflicts              [#########-------------]  43%( 64/145) checking for file conflicts              [#########-------------]  44%( 65/145) checking for file conflicts              [#########-------------]  44%( 66/145) checking for file conflicts              [#########-------------]  45%( 67/145) checking for file conflicts              [##########------------]  46%( 68/145) checking for file conflicts              [##########------------]  46%( 69/145) checking for file conflicts              [##########------------]  47%( 70/145) checking for file conflicts              [##########------------]  48%( 71/145) checking for file conflicts              [##########------------]  48%( 72/145) checking for file conflicts              [##########------------]  49%( 73/145) checking for file conflicts              [###########-----------]  50%( 74/145) checking for file conflicts              [###########-----------]  51%( 75/145) checking for file conflicts              [###########-----------]  51%( 76/145) checking for file conflicts              [###########-----------]  52%( 77/145) checking for file conflicts              [###########-----------]  53%( 78/145) checking for file conflicts              [###########-----------]  53%( 79/145) checking for file conflicts              [###########-----------]  54%( 80/145) checking for file conflicts              [############----------]  55%( 81/145) checking for file conflicts              [############----------]  55%( 82/145) checking for file conflicts              [############----------]  56%( 83/145) checking for file conflicts              [############----------]  57%( 84/145) checking for file conflicts              [############----------]  57%( 85/145) checking for file conflicts              [############----------]  58%( 86/145) checking for file conflicts              [############----------]  59%( 87/145) checking for file conflicts              [#############---------]  60%( 88/145) checking for file conflicts              [#############---------]  60%( 89/145) checking for file conflicts              [#############---------]  61%( 90/145) checking for file conflicts              [#############---------]  62%( 91/145) checking for file conflicts              [#############---------]  62%( 92/145) checking for file conflicts              [#############---------]  63%( 93/145) checking for file conflicts              [##############--------]  64%( 94/145) checking for file conflicts              [##############--------]  64%( 95/145) checking for file conflicts              [##############--------]  65%( 96/145) checking for file conflicts              [##############--------]  66%( 97/145) checking for file conflicts              [##############--------]  66%( 98/145) checking for file conflicts              [##############--------]  67%( 99/145) checking for file conflicts              [##############--------]  68%(100/145) checking for file conflicts              [##############--------]  68%(101/145) checking for file conflicts              [###############-------]  69%(102/145) checking for file conflicts              [###############-------]  70%(103/145) checking for file conflicts              [###############-------]  71%(104/145) checking for file conflicts              [###############-------]  71%(105/145) checking for file conflicts              [###############-------]  72%(106/145) checking for file conflicts              [################------]  73%(107/145) checking for file conflicts              [################------]  73%(108/145) checking for file conflicts              [################------]  74%(109/145) checking for file conflicts              [################------]  75%(110/145) checking for file conflicts              [################------]  75%(111/145) checking for file conflicts              [################------]  76%(112/145) checking for file conflicts              [################------]  77%(113/145) checking for file conflicts              [################------]  77%(114/145) checking for file conflicts              [#################-----]  78%(115/145) checking for file conflicts              [#################-----]  79%(116/145) checking for file conflicts              [#################-----]  80%(117/145) checking for file conflicts              [#################-----]  80%(118/145) checking for file conflicts              [#################-----]  81%(119/145) checking for file conflicts              [##################----]  82%(120/145) checking for file conflicts              [##################----]  82%(121/145) checking for file conflicts              [##################----]  83%(122/145) checking for file conflicts              [##################----]  84%(123/145) checking for file conflicts              [##################----]  84%(124/145) checking for file conflicts              [##################----]  85%(125/145) checking for file conflicts              [##################----]  86%(126/145) checking for file conflicts              [##################----]  86%(127/145) checking for file conflicts              [###################---]  87%(128/145) checking for file conflicts              [###################---]  88%(129/145) checking for file conflicts              [###################---]  88%(130/145) checking for file conflicts              [###################---]  89%(131/145) checking for file conflicts              [###################---]  90%(132/145) checking for file conflicts              [####################--]  91%(133/145) checking for file conflicts              [####################--]  91%(134/145) checking for file conflicts              [####################--]  92%(135/145) checking for file conflicts              [####################--]  93%(136/145) checking for file conflicts              [####################--]  93%(137/145) checking for file conflicts              [####################--]  94%(138/145) checking for file conflicts              [####################--]  95%(139/145) checking for file conflicts              [####################--]  95%(140/145) checking for file conflicts              [#####################-]  96%(141/145) checking for file conflicts              [#####################-]  97%(142/145) checking for file conflicts              [#####################-]  97%(143/145) checking for file conflicts              [#####################-]  98%(144/145) checking for file conflicts              [#####################-]  99%(145/145) checking for file conflicts              [######################] 100%
+:: Processing package changes...
+(1/1) removing wpa_supplicant                      [----------------------]   0%(1/1) removing wpa_supplicant                      [----------------------]   0%(1/1) removing wpa_supplicant                      [######################] 100%
+(  1/145) installing python-pycparser              [----------------------]   0%(  1/145) installing python-pycparser              [######################] 100%
+(  2/145) installing python-cffi                   [----------------------]   0%(  2/145) installing python-cffi                   [######################] 100%
+Optional dependencies for python-cffi
+    python-setuptools: "limited api" version checking in cffi.setuptools_ext
+    [pending]
+(  3/145) installing python-cryptography           [----------------------]   0%(  3/145) installing python-cryptography           [##################----]  85%(  3/145) installing python-cryptography           [######################] 100%
+(  4/145) installing python-josepy                 [----------------------]   0%(  4/145) installing python-josepy                 [######################] 100%
+(  5/145) installing python-pyopenssl              [----------------------]   0%(  5/145) installing python-pyopenssl              [######################] 100%
+(  6/145) installing python-pytz                   [----------------------]   0%(  6/145) installing python-pytz                   [######################] 100%
+(  7/145) installing python-pyrfc3339              [----------------------]   0%(  7/145) installing python-pyrfc3339              [######################] 100%
+(  8/145) installing python-charset-normalizer     [----------------------]   0%(  8/145) installing python-charset-normalizer     [######################] 100%
+(  9/145) installing python-idna                   [----------------------]   0%(  9/145) installing python-idna                   [######################] 100%
+( 10/145) installing python-requests               [----------------------]   0%( 10/145) installing python-requests               [######################] 100%
+Optional dependencies for python-requests
+    python-chardet: alternative character encoding library [installed]
+    python-pysocks: SOCKS proxy support
+( 11/145) installing python-acme                   [----------------------]   0%( 11/145) installing python-acme                   [######################] 100%
+( 12/145) installing python-configargparse         [----------------------]   0%( 12/145) installing python-configargparse         [######################] 100%
+Optional dependencies for python-configargparse
+    python-yaml: for YAML support [installed]
+( 13/145) installing python-distro                 [----------------------]   0%( 13/145) installing python-distro                 [######################] 100%
+( 14/145) installing python-parsedatetime          [----------------------]   0%( 14/145) installing python-parsedatetime          [######################] 100%
+( 15/145) installing certbot                       [----------------------]   0%( 15/145) installing certbot                       [##############--------]  64%( 15/145) installing certbot                       [######################] 100%
+Optional dependencies for certbot
+    certbot-apache: Apache plugin for Let’s Encrypt client
+    certbot-nginx: Nginx plugin for Let’s Encrypt client
+( 16/145) installing nftables                      [----------------------]   0%( 16/145) installing nftables                      [######################] 100%
+Optional dependencies for nftables
+    python: Python bindings [installed]
+( 17/145) installing dnsmasq                       [----------------------]   0%( 17/145) installing dnsmasq                       [######################] 100%
+( 18/145) installing dos2unix                      [----------------------]   0%( 18/145) installing dos2unix                      [######################] 100%
+( 19/145) installing dosfstools                    [----------------------]   0%( 19/145) installing dosfstools                    [######################] 100%
+( 20/145) installing libpng                        [----------------------]   0%( 20/145) installing libpng                        [######################] 100%
+( 21/145) installing freetype2                     [----------------------]   0%( 21/145) installing freetype2                     [######################] 100%
+Optional dependencies for freetype2
+    harfbuzz: Improved autohinting [pending]
+( 22/145) installing hostapd                       [----------------------]   0%( 22/145) installing hostapd                       [######################] 100%
+( 23/145) installing ipmitool                      [----------------------]   0%( 23/145) installing ipmitool                      [----------------------]   0%( 23/145) installing ipmitool                      [----------------------]   0%( 23/145) installing ipmitool                      [----------------------]   0%( 23/145) installing ipmitool                      [----------------------]   0%( 23/145) installing ipmitool                      [----------------------]   0%( 23/145) installing ipmitool                      [----------------------]   0%( 23/145) installing ipmitool                      [######################] 100%
+( 24/145) installing libconfig                     [----------------------]   0%( 24/145) installing libconfig                     [######################] 100%
+( 25/145) installing libuv                         [----------------------]   0%( 25/145) installing libuv                         [######################] 100%
+( 26/145) installing libev                         [----------------------]   0%( 26/145) installing libev                         [######################] 100%
+( 27/145) installing libwebsockets                 [----------------------]   0%( 27/145) installing libwebsockets                 [######################] 100%
+( 28/145) installing dconf                         [----------------------]   0%( 28/145) installing dconf                         [######################] 100%
+( 29/145) installing gsettings-system-schemas      [----------------------]   0%( 29/145) installing gsettings-system-schemas      [######################] 100%
+( 30/145) installing libproxy                      [----------------------]   0%( 30/145) installing libproxy                      [######################] 100%
+( 31/145) installing glib-networking               [----------------------]   0%( 31/145) installing glib-networking               [######################] 100%
+( 32/145) installing libsoup3                      [----------------------]   0%( 32/145) installing libsoup3                      [######################] 100%
+Optional dependencies for libsoup3
+    samba: Windows Domain SSO
+( 33/145) installing gssdp                         [----------------------]   0%( 33/145) installing gssdp                         [######################] 100%
+Optional dependencies for gssdp
+    gtk4: gssdp-device-sniffer
+( 34/145) installing gupnp                         [----------------------]   0%( 34/145) installing gupnp                         [######################] 100%
+Optional dependencies for gupnp
+    python: gupnp-binding-tool [installed]
+( 35/145) installing gupnp-igd                     [----------------------]   0%( 35/145) installing gupnp-igd                     [######################] 100%
+( 36/145) installing libnice                       [----------------------]   0%( 36/145) installing libnice                       [######################] 100%
+Optional dependencies for libnice
+    gstreamer: "nice" GStreamer plugin
+( 37/145) installing nspr                          [----------------------]   0%( 37/145) installing nspr                          [######################] 100%
+( 38/145) installing nss                           [----------------------]   0%( 38/145) installing nss                           [###########-----------]  51%( 38/145) installing nss                           [######################] 100%
+( 39/145) installing libsrtp                       [----------------------]   0%( 39/145) installing libsrtp                       [######################] 100%
+( 40/145) installing janus-gateway-pikvm           [----------------------]   0%( 40/145) installing janus-gateway-pikvm           [####################--]  93%( 40/145) installing janus-gateway-pikvm           [######################] 100%
+( 41/145) installing libgpiod                      [----------------------]   0%( 41/145) installing libgpiod                      [######################] 100%
+( 42/145) installing xkeyboard-config              [----------------------]   0%( 42/145) installing xkeyboard-config              [############----------]  55%( 42/145) installing xkeyboard-config              [######################] 100%
+( 43/145) installing libxkbcommon                  [----------------------]   0%( 43/145) installing libxkbcommon                  [######################] 100%
+Optional dependencies for libxkbcommon
+    libxkbcommon-x11: xkbcli interactive-x11
+    wayland: xkbcli interactive-wayland
+( 44/145) installing mailcap                       [----------------------]   0%( 44/145) installing mailcap                       [######################] 100%
+( 45/145) installing nginx-mainline                [----------------------]   0%( 45/145) installing nginx-mainline                [######################] 100%
+Optional dependencies for nginx-mainline
+    nginx-mainline-mod-geoip: GeoIP support
+    nginx-mainline-mod-image-filter: transform images
+    nginx-mainline-mod-mail: proxy IMAP, POP and SMTP protocols
+    nginx-mainline-mod-perl: perl variables and location handlers
+    nginx-mainline-mod-stream: proxy TCP/UDP data streams
+    nginx-mainline-mod-xslt: transform XML responses
+( 46/145) installing parted                        [----------------------]   0%( 46/145) installing parted                        [######################] 100%
+( 47/145) installing python-aiofiles               [----------------------]   0%( 47/145) installing python-aiofiles               [######################] 100%
+( 48/145) installing llhttp                        [----------------------]   0%( 48/145) installing llhttp                        [######################] 100%
+( 49/145) installing python-aiohappyeyeballs       [----------------------]   0%( 49/145) installing python-aiohappyeyeballs       [######################] 100%
+( 50/145) installing python-frozenlist             [----------------------]   0%( 50/145) installing python-frozenlist             [######################] 100%
+( 51/145) installing python-aiosignal              [----------------------]   0%( 51/145) installing python-aiosignal              [######################] 100%
+( 52/145) installing python-multidict              [----------------------]   0%( 52/145) installing python-multidict              [######################] 100%
+( 53/145) installing python-propcache              [----------------------]   0%( 53/145) installing python-propcache              [######################] 100%
+( 54/145) installing python-yarl                   [----------------------]   0%( 54/145) installing python-yarl                   [######################] 100%
+( 55/145) installing python-aiohttp                [----------------------]   0%( 55/145) installing python-aiohttp                [####################--]  91%( 55/145) installing python-aiohttp                [######################] 100%
+Optional dependencies for python-aiohttp
+    gunicorn: to deploy using Gunicorn
+    python-aiodns: for fast DNS resolving
+    python-brotli: for Brotli transfer-encodings support
+( 56/145) installing python-async-lru              [----------------------]   0%( 56/145) installing python-async-lru              [######################] 100%
+( 57/145) installing python-bcrypt                 [----------------------]   0%( 57/145) installing python-bcrypt                 [######################] 100%
+( 58/145) installing python-dbus                   [----------------------]   0%( 58/145) installing python-dbus                   [######################] 100%
+Optional dependencies for python-dbus
+    python-gobject: D-Bus services via PyGI
+( 59/145) installing python-dbus-next              [----------------------]   0%( 59/145) installing python-dbus-next              [######################] 100%
+( 60/145) installing python-evdev                  [----------------------]   0%( 60/145) installing python-evdev                  [######################] 100%
+( 61/145) installing hidapi                        [----------------------]   0%( 61/145) installing hidapi                        [######################] 100%
+Optional dependencies for hidapi
+    libusb: for hidapi-libusb [installed]
+( 62/145) installing python-hidapi                 [----------------------]   0%( 62/145) installing python-hidapi                 [######################] 100%
+( 63/145) installing python-pyasn1                 [----------------------]   0%( 63/145) installing python-pyasn1                 [######################] 100%
+( 64/145) installing python-pyasn1-modules         [----------------------]   0%( 64/145) installing python-pyasn1-modules         [######################] 100%
+( 65/145) installing python-ldap                   [----------------------]   0%( 65/145) installing python-ldap                   [######################] 100%
+( 66/145) installing python-wrapt                  [----------------------]   0%( 66/145) installing python-wrapt                  [######################] 100%
+( 67/145) installing python-deprecated             [----------------------]   0%( 67/145) installing python-deprecated             [######################] 100%
+( 68/145) installing python-packaging              [----------------------]   0%( 68/145) installing python-packaging              [######################] 100%
+( 69/145) installing jbigkit                       [----------------------]   0%( 69/145) installing jbigkit                       [######################] 100%
+( 70/145) installing libjpeg-turbo                 [----------------------]   0%( 70/145) installing libjpeg-turbo                 [######################] 100%
+( 71/145) installing libtiff                       [----------------------]   0%( 71/145) installing libtiff                       [######################] 100%
+Optional dependencies for libtiff
+    freeglut: for using tiffgt
+( 72/145) installing lcms2                         [----------------------]   0%( 72/145) installing lcms2                         [######################] 100%
+( 73/145) installing aom                           [----------------------]   0%( 73/145) installing aom                           [######################] 100%
+( 74/145) installing dav1d                         [----------------------]   0%( 74/145) installing dav1d                         [######################] 100%
+Optional dependencies for dav1d
+    dav1d-doc: HTML documentation
+( 75/145) installing libwebp                       [----------------------]   0%( 75/145) installing libwebp                       [######################] 100%
+Optional dependencies for libwebp
+    libwebp-utils: WebP conversion and inspection tools
+( 76/145) installing libyuv                        [----------------------]   0%( 76/145) installing libyuv                        [######################] 100%
+( 77/145) installing rav1e                         [----------------------]   0%( 77/145) installing rav1e                         [----------------------]   0%( 77/145) installing rav1e                         [----------------------]   0%( 77/145) installing rav1e                         [----------------------]   0%( 77/145) installing rav1e                         [----------------------]   0%( 77/145) installing rav1e                         [----------------------]   0%( 77/145) installing rav1e                         [----------------------]   0%( 77/145) installing rav1e                         [###################---]  87%( 77/145) installing rav1e                         [######################] 100%
+( 78/145) installing libavif                       [----------------------]   0%( 78/145) installing libavif                       [######################] 100%
+( 79/145) installing fribidi                       [----------------------]   0%( 79/145) installing fribidi                       [######################] 100%
+( 80/145) installing graphite                      [----------------------]   0%( 80/145) installing graphite                      [######################] 100%
+Optional dependencies for graphite
+    graphite-docs: Documentation
+( 81/145) installing harfbuzz                      [----------------------]   0%( 81/145) installing harfbuzz                      [####################--]  91%( 81/145) installing harfbuzz                      [######################] 100%
+Optional dependencies for harfbuzz
+    harfbuzz-utils: utilities
+( 82/145) installing libraqm                       [----------------------]   0%( 82/145) installing libraqm                       [######################] 100%
+( 83/145) installing openjpeg2                     [----------------------]   0%( 83/145) installing openjpeg2                     [##########------------]  48%( 83/145) installing openjpeg2                     [####################--]  91%( 83/145) installing openjpeg2                     [######################] 100%
+( 84/145) installing libimagequant                 [----------------------]   0%( 84/145) installing libimagequant                 [######################] 100%
+( 85/145) installing xcb-proto                     [----------------------]   0%( 85/145) installing xcb-proto                     [######################] 100%
+( 86/145) installing xorgproto                     [----------------------]   0%( 86/145) installing xorgproto                     [######################] 100%
+( 87/145) installing libxdmcp                      [----------------------]   0%( 87/145) installing libxdmcp                      [######################] 100%
+( 88/145) installing libxau                        [----------------------]   0%( 88/145) installing libxau                        [######################] 100%
+( 89/145) installing libxcb                        [----------------------]   0%( 89/145) installing libxcb                        [##########------------]  49%( 89/145) installing libxcb                        [##############--------]  67%( 89/145) installing libxcb                        [##################----]  84%( 89/145) installing libxcb                        [######################] 100%
+( 90/145) installing python-pillow                 [----------------------]   0%( 90/145) installing python-pillow                 [#############---------]  62%( 90/145) installing python-pillow                 [######################] 100%
+Optional dependencies for python-pillow
+    libwebp: for webp images [installed]
+    tk: for the ImageTK module
+    python-olefile: OLE2 file support
+    python-pyqt6: for the ImageQt module
+    python-defusedxml: for reading XMP tags
+( 91/145) installing python-cbor2                  [----------------------]   0%( 91/145) installing python-cbor2                  [######################] 100%
+( 92/145) installing python-spidev                 [----------------------]   0%( 92/145) installing python-spidev                 [######################] 100%
+( 93/145) installing python-raspberry-gpio         [----------------------]   0%( 93/145) installing python-raspberry-gpio         [######################] 100%
+( 94/145) installing python-smbus2                 [----------------------]   0%( 94/145) installing python-smbus2                 [######################] 100%
+( 95/145) installing python-pyusb                  [----------------------]   0%( 95/145) installing python-pyusb                  [######################] 100%
+( 96/145) installing python-pyserial               [----------------------]   0%( 96/145) installing python-pyserial               [######################] 100%
+( 97/145) installing python-pyftdi                 [----------------------]   0%( 97/145) installing python-pyftdi                 [######################] 100%
+( 98/145) installing python-luma-core              [----------------------]   0%( 98/145) installing python-luma-core              [######################] 100%
+( 99/145) installing python-luma-oled              [----------------------]   0%( 99/145) installing python-luma-oled              [######################] 100%
+(100/145) installing python-mako                   [----------------------]   0%(100/145) installing python-mako                   [######################] 100%
+Optional dependencies for python-mako
+    python-babel: for i18n features
+    python-beaker: for caching support
+    python-dogpile.cache: for caching support
+    python-pygments: for syntax highlighting [pending]
+    python-pytest: for testing utilities
+(101/145) installing python-netifaces              [----------------------]   0%(101/145) installing python-netifaces              [######################] 100%
+(102/145) installing python-pam                    [----------------------]   0%(102/145) installing python-pam                    [######################] 100%
+(103/145) installing python-passlib                [----------------------]   0%(103/145) installing python-passlib                [#############---------]  61%(103/145) installing python-passlib                [######################] 100%
+Optional dependencies for python-passlib
+    python-fastpbkdf2: accelerate PBKDF2-based hashes
+    python-bcrypt: accelerate Bcrypt hashes [installed]
+    python-scrypt: accelerate SCrypt hashes
+(104/145) installing python-periphery              [----------------------]   0%(104/145) installing python-periphery              [######################] 100%
+(105/145) installing python-filelock               [----------------------]   0%(105/145) installing python-filelock               [######################] 100%
+(106/145) installing python-wheel                  [----------------------]   0%(106/145) installing python-wheel                  [######################] 100%
+Optional dependencies for python-wheel
+    python-keyring: for wheel.signatures
+    python-xdg: for wheel.signatures
+    python-setuptools: for legacy bdist_wheel subcommand [pending]
+(107/145) installing python-pip                    [----------------------]   0%(107/145) installing python-pip                    [###-------------------]  17%(107/145) installing python-pip                    [#######---------------]  35%(107/145) installing python-pip                    [############----------]  55%(107/145) installing python-pip                    [###############-------]  72%(107/145) installing python-pip                    [###################---]  90%(107/145) installing python-pip                    [######################] 100%
+(108/145) installing python-psutil                 [----------------------]   0%(108/145) installing python-psutil                 [######################] 100%
+(109/145) installing python-six                    [----------------------]   0%(109/145) installing python-six                    [######################] 100%
+(110/145) installing python-dateutil               [----------------------]   0%(110/145) installing python-dateutil               [######################] 100%
+(111/145) installing python-pyghmi                 [----------------------]   0%(111/145) installing python-pyghmi                 [######################] 100%
+(112/145) installing python-pygments               [----------------------]   0%(112/145) installing python-pygments               [####------------------]  22%(112/145) installing python-pygments               [#########-------------]  42%(112/145) installing python-pygments               [#############---------]  62%(112/145) installing python-pygments               [#################-----]  80%(112/145) installing python-pygments               [######################] 100%
+(113/145) installing python-pyotp                  [----------------------]   0%(113/145) installing python-pyotp                  [######################] 100%
+(114/145) installing python-netaddr                [----------------------]   0%(114/145) installing python-netaddr                [###################---]  89%(114/145) installing python-netaddr                [######################] 100%
+Optional dependencies for python-netaddr
+    ipython: netaddr interractive command support
+(115/145) installing python-pyrad                  [----------------------]   0%(115/145) installing python-pyrad                  [######################] 100%
+(116/145) installing python-pyserial-asyncio       [----------------------]   0%(116/145) installing python-pyserial-asyncio       [######################] 100%
+(117/145) installing python-pyudev                 [----------------------]   0%(117/145) installing python-pyudev                 [######################] 100%
+Optional dependencies for python-pyudev
+    python-pyqt5: PyQt integration
+    python-wxpython: WX integration
+(118/145) installing python-qrcode                 [----------------------]   0%(118/145) installing python-qrcode                 [######################] 100%
+Optional dependencies for python-qrcode
+    python-pillow: faster but not python native backend [installed]
+    python-pypng: png support
+(119/145) installing python-setproctitle           [----------------------]   0%(119/145) installing python-setproctitle           [######################] 100%
+(120/145) installing python-more-itertools         [----------------------]   0%(120/145) installing python-more-itertools         [######################] 100%
+(121/145) installing python-jaraco.functools       [----------------------]   0%(121/145) installing python-jaraco.functools       [######################] 100%
+(122/145) installing python-jaraco.context         [----------------------]   0%(122/145) installing python-jaraco.context         [######################] 100%
+(123/145) installing python-autocommand            [----------------------]   0%(123/145) installing python-autocommand            [######################] 100%
+(124/145) installing python-jaraco.text            [----------------------]   0%(124/145) installing python-jaraco.text            [######################] 100%
+Optional dependencies for python-jaraco.text
+    python-inflect: for show-newlines script
+(125/145) installing python-jaraco.collections     [----------------------]   0%(125/145) installing python-jaraco.collections     [######################] 100%
+(126/145) installing python-platformdirs           [----------------------]   0%(126/145) installing python-platformdirs           [######################] 100%
+(127/145) installing python-setuptools             [----------------------]   0%(127/145) installing python-setuptools             [########--------------]  39%(127/145) installing python-setuptools             [################------]  74%(127/145) installing python-setuptools             [######################] 100%
+(128/145) installing python-systemd                [----------------------]   0%(128/145) installing python-systemd                [######################] 100%
+(129/145) installing python-xlib                   [----------------------]   0%(129/145) installing python-xlib                   [######################] 100%
+(130/145) installing python-zstandard              [----------------------]   0%(130/145) installing python-zstandard              [######################] 100%
+Optional dependencies for python-zstandard
+    python-cffi [installed]
+(131/145) installing raspberrypi-io-access         [----------------------]   0%(131/145) installing raspberrypi-io-access         [######################] 100%
+==> Ensuring IO groups ...
+Creating group 'i2c' with GID 968.
+Creating group 'spi' with GID 967.
+Creating group 'gpio' with GID 966.
+(132/145) installing run-parts                     [----------------------]   0%(132/145) installing run-parts                     [######################] 100%
+(133/145) installing libpciaccess                  [----------------------]   0%(133/145) installing libpciaccess                  [######################] 100%
+(134/145) installing libdrm                        [----------------------]   0%(134/145) installing libdrm                        [######################] 100%
+Optional dependencies for libdrm
+    cairo: needed for modetest tool
+(135/145) installing alsa-topology-conf            [----------------------]   0%(135/145) installing alsa-topology-conf            [######################] 100%
+(136/145) installing alsa-ucm-conf                 [----------------------]   0%(136/145) installing alsa-ucm-conf                 [###################---]  87%(136/145) installing alsa-ucm-conf                 [######################] 100%
+(137/145) installing alsa-lib                      [----------------------]   0%(137/145) installing alsa-lib                      [######################] 100%
+(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [----------------------]   0%(138/145) installing opus                          [#####################-]  99%(138/145) installing opus                          [######################] 100%
+(139/145) installing speexdsp                      [----------------------]   0%(139/145) installing speexdsp                      [######################] 100%
+(140/145) installing libmd                         [----------------------]   0%(140/145) installing libmd                         [######################] 100%
+(141/145) installing libbsd                        [----------------------]   0%(141/145) installing libbsd                        [######################] 100%
+(142/145) installing ustreamer                     [----------------------]   0%(142/145) installing ustreamer                     [######################] 100%
+(143/145) installing hicolor-icon-theme            [----------------------]   0%(143/145) installing hicolor-icon-theme            [#############---------]  60%(143/145) installing hicolor-icon-theme            [######################] 100%
+(144/145) installing v4l-utils                     [----------------------]   0%(144/145) installing v4l-utils                     [########--------------]  37%(144/145) installing v4l-utils                     [###############-------]  69%(144/145) installing v4l-utils                     [##################----]  85%(144/145) installing v4l-utils                     [######################] 100%
+Optional dependencies for v4l-utils
+    qt6-base: for qv4l2 and qvidcap
+    qt6-5compat: for qv4l2
+    alsa-lib: for qv4l2 [installed]
+(145/145) installing wpa_supplicant-pikvm          [----------------------]   0%(145/145) installing wpa_supplicant-pikvm          [################------]  77%(145/145) installing wpa_supplicant-pikvm          [######################] 100%
+:: Running post-transaction hooks...
+( 1/10) Creating system user accounts...
+Creating group 'dnsmasq' with GID 965.
+Creating user 'dnsmasq' (dnsmasq daemon) with UID 965 and GID 965.
+( 2/10) Reloading system manager configuration...
+  Skipped: Current root is not booted.
+( 3/10) Reloading user manager configuration...
+  Skipped: Current root is not booted.
+( 4/10) Restarting marked services...
+  Skipped: Current root is not booted.
+( 5/10) Reloading device manager configuration...
+  Skipped: Device manager is not running.
+( 6/10) Arming ConditionNeedsUpdate...
+( 7/10) Reloading system bus configuration...
+  Skipped: Current root is not booted.
+( 8/10) Updating GIO module cache...
+( 9/10) Compiling GSettings XML schema files...
+(10/10) Updating the info directory file...
+[?25h[33;1m----- Building package ...[0m
+[33;1m----- ... Skipping tests (--nocheck) and source verification (--skippgpcheck)[0m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+[1m[31m==> ERROR:(B[m[1m install file (kvmd.install) does not exist or is not a regular file.(B[m
+Traceback (most recent call last):
+  File [35m"/tools/buildpkg"[0m, line [35m293[0m, in [35m<module>[0m
+    [31mmain[0m[1;31m()[0m
+    [31m~~~~[0m[1;31m^^[0m
+  File [35m"/tools/buildpkg"[0m, line [35m270[0m, in [35mmain[0m
+    [31m_build[0m[1;31m([0m
+    [31m~~~~~~[0m[1;31m^[0m
+        [1;31mbuild_path=o.build_dir,[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^[0m
+    ...<2 lines>...
+        [1;31mno_extract=o.no_extract,[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"/tools/buildpkg"[0m, line [35m170[0m, in [35m_build[0m
+    [31m_run[0m[1;31m(*cmd)[0m
+    [31m~~~~[0m[1;31m^^^^^^[0m
+  File [35m"/tools/buildpkg"[0m, line [35m47[0m, in [35m_run[0m
+    [31msubprocess.run[0m[1;31m(cmd, check=True)[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"/usr/lib/python3.13/subprocess.py"[0m, line [35m577[0m, in [35mrun[0m
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+[1;35msubprocess.CalledProcessError[0m: [35mCommand '('sudo', '-u', 'alarm', 'makepkg', '-A', '--nocheck', '--skippgpcheck')' returned non-zero exit status 12.[0m
+make[2]: *** [Makefile:146: _run] Error 1
+make[2]: Leaving directory '/mnt/e/GitHub/Symmetric/pikvm/packages'
+make[1]: *** [Makefile:102: _build] Error 2
+make[1]: Leaving directory '/mnt/e/GitHub/Symmetric/pikvm/packages'
+make: *** [Makefile:78: build-kvmd-package] Error 2

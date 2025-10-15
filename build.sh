@@ -6,8 +6,9 @@
 # permissions, builds the OS and image, then copies the results back.
 #
 # Usage:
-#   sudo ./build.sh                 # Build in /pikvm (default)
-#   sudo BUILD_IN_TMP=1 ./build.sh  # Build in /tmp/pikvm (auto-cleanup on reboot)
+#   sudo ./build.sh                      # Build in /pikvm (default, auto-cleanup)
+#   sudo BUILD_IN_TMP=1 ./build.sh       # Build in /tmp/pikvm (auto-cleanup on reboot)
+#   sudo KEEP_BUILD_DIR=1 ./build.sh     # Keep build directory for debugging
 #
 # The script handles all permission issues automatically by:
 # - Running as sudo to copy files to /pikvm
@@ -33,8 +34,14 @@ IMAGE_DIR="images"
 # Trap to handle errors
 cleanup_on_error() {
     echo -e "\n${RED}Build failed! Check the error messages above.${NC}"
-    echo -e "${YELLOW}Build directory preserved at: $DEST_DIR${NC}"
-    echo -e "${YELLOW}You can inspect it or clean up with: sudo rm -rf $DEST_DIR${NC}"
+    if [ -z "$KEEP_BUILD_DIR" ]; then
+        echo -e "${YELLOW}Cleaning up build directory: $DEST_DIR${NC}"
+        $SUDO rm -rf "$DEST_DIR"
+        echo -e "${GREEN}Build directory cleaned up${NC}"
+    else
+        echo -e "${YELLOW}Build directory preserved at: $DEST_DIR${NC}"
+        echo -e "${YELLOW}Clean up with: sudo rm -rf $DEST_DIR${NC}"
+    fi
 }
 trap cleanup_on_error ERR
 
@@ -77,7 +84,14 @@ echo "Home directory: ${REAL_HOME:-/home/$REAL_USERNAME}"
 echo -e "${GREEN}Step 1: Copying pikvm directory to $DEST_DIR${NC}"
 $SUDO rm -rf "$DEST_DIR"
 $SUDO mkdir -p "$DEST_DIR"
-$SUDO cp -a "$PIKVM_SOURCE_DIR"/* "$DEST_DIR/"
+echo "Copying (excluding images/ and .pi-builder/, but including packages/repos/)..."
+$SUDO rsync -a \
+    --exclude='os/images/' \
+    --exclude='**/.pi-builder/' \
+    --include='packages/repos/' \
+    --include='packages/repos/**' \
+    "$PIKVM_SOURCE_DIR/" "$DEST_DIR/"
+echo "✓ Copied successfully"
 
 # Ensure proper ownership and permissions
 echo "Setting ownership to $REAL_USERNAME..."
@@ -108,6 +122,33 @@ if [ ! -w "$DEST_DIR/os" ]; then
 fi
 
 echo -e "${GREEN}Permissions verified successfully${NC}"
+
+# Verify required directories exist
+echo ""
+echo "Verifying repository structure..."
+if [ ! -d "$DEST_DIR/kvmd" ]; then
+    echo -e "${RED}Error: kvmd directory not found at $DEST_DIR/kvmd${NC}"
+    echo "This directory is required for building the kvmd package"
+    exit 1
+fi
+if [ ! -d "$DEST_DIR/packages" ]; then
+    echo -e "${RED}Error: packages directory not found at $DEST_DIR/packages${NC}"
+    echo "This directory is required for building packages"
+    exit 1
+fi
+echo "✓ kvmd directory found"
+echo "✓ packages directory found"
+
+# Fix binfmt configuration for ARM cross-compilation
+echo ""
+echo "Fixing ARM binfmt configuration..."
+if [ -f /proc/sys/fs/binfmt_misc/arm ]; then
+    echo "Disabling existing ARM binfmt handler..."
+    echo -1 | $SUDO tee /proc/sys/fs/binfmt_misc/arm > /dev/null 2>&1 || true
+    echo "✓ ARM binfmt reset"
+else
+    echo "No existing ARM binfmt handler found, continuing..."
+fi
 
 # Step 2: Build OS
 echo ""
@@ -169,7 +210,16 @@ if [ -d "$SCRIPT_DIR/$IMAGE_DIR" ]; then
 fi
 echo ""
 echo -e "${GREEN}Images available at: $SCRIPT_DIR/$IMAGE_DIR${NC}"
+
+# Step 6: Clean up build directory
 echo ""
-echo -e "${YELLOW}You can now clean up the build directory with:${NC}"
-echo -e "${YELLOW}  sudo rm -rf $DEST_DIR${NC}"
+echo -e "${GREEN}Step 6: Cleaning up build directory${NC}"
+if [ -z "$KEEP_BUILD_DIR" ]; then
+    echo "Removing $DEST_DIR..."
+    $SUDO rm -rf "$DEST_DIR"
+    echo -e "${GREEN}✓ Build directory cleaned up${NC}"
+else
+    echo -e "${YELLOW}Keeping build directory (KEEP_BUILD_DIR is set): $DEST_DIR${NC}"
+    echo -e "${YELLOW}Clean up manually with: sudo rm -rf $DEST_DIR${NC}"
+fi
 

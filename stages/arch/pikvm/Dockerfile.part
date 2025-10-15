@@ -12,6 +12,9 @@ ENV FAN=$FAN
 
 RUN echo $PLATFORM $VERSIONS
 
+# Configure pacman for better network resilience
+RUN sed -i '/^\[options\]/a XferCommand = /usr/bin/curl --connect-timeout 60 --max-time 300 --retry 3 --retry-delay 3 -L -C - -f -o %o %u' /etc/pacman.conf
+
 # Install official packages from files.pikvm.org
 RUN pacman --noconfirm --ask=4 -Syu \
 	&& pacman --noconfirm --ask=4 -S pikvm-os-raspberrypi \
@@ -19,13 +22,35 @@ RUN pacman --noconfirm --ask=4 -Syu \
 	&& (mv /boot/cmdline.txt.pacsave /boot/cmdline.txt || true) \
 	&& rm -rf /var/cache/pacman/pkg/* /boot/*.pacnew
 
+# Install locally-built kvmd packages FIRST (before dependencies pull official versions)
+COPY stages/pikvm/local-kvmd /tmp/local-kvmd
+RUN echo "==> Installing locally-built kvmd packages" \
+	&& if ls /tmp/local-kvmd/kvmd-[0-9]*.pkg.tar.xz 1> /dev/null 2>&1; then \
+		echo "==> Found local kvmd packages:" \
+		&& ls -lh /tmp/local-kvmd/ \
+		&& echo "==> Installing base kvmd and platform package for $PLATFORM-$BOARD" \
+		&& pacman -U --noconfirm --ask=4 --overwrite '*' /tmp/local-kvmd/kvmd-[0-9]*.pkg.tar.xz /tmp/local-kvmd/kvmd-platform-$PLATFORM-$BOARD-[0-9]*.pkg.tar.xz \
+		&& echo "==> Successfully installed local kvmd packages:" \
+		&& pacman -Q kvmd kvmd-platform-$PLATFORM-$BOARD \
+		&& rm -rf /tmp/local-kvmd \
+	; else \
+		echo "ERROR: No local kvmd package found!" \
+		&& echo "Local build is required but packages are missing." \
+		&& exit 1 \
+	; fi
+
+# Prevent pacman from upgrading our locally-built kvmd packages
+RUN sed -i '/^\[options\]/a IgnorePkg = kvmd kvmd-platform-*' /etc/pacman.conf
+
+# Install other pikvm packages and dependencies (kvmd is already installed above)
+# Note: wiringpi-pikvm is already installed as a dependency of kvmd-fan
+# Note: vi needs to be removed before installing vi-vim-symlink
+RUN pacman --noconfirm --ask=4 -R vi || true
 RUN pkg-install --assume-installed tessdata \
-		kvmd-platform-$PLATFORM-$BOARD \
 		kvmd-webterm \
 		kvmd-fan \
 		tesseract \
 		tesseract-data-eng \
-		wiringpi \
 		pastebinit \
 		tmate \
 		vi-vim-symlink \
@@ -33,17 +58,6 @@ RUN pkg-install --assume-installed tessdata \
 		avahi \
 		hostapd \
 	&& if [[ $PLATFORM =~ ^v4.*$ ]]; then pkg-install flashrom-pikvm; fi
-
-# Replace official kvmd with locally-built version
-COPY local-kvmd /tmp/local-kvmd
-RUN echo "==> Installing locally-built kvmd package" \
-	&& if ls /tmp/local-kvmd/kvmd-[0-9]*.pkg.tar.xz 1> /dev/null 2>&1; then \
-		pacman -U --noconfirm /tmp/local-kvmd/kvmd-[0-9]*.pkg.tar.xz \
-		&& echo "==> Successfully installed local kvmd package" \
-		&& rm -rf /tmp/local-kvmd \
-	; else \
-		echo "WARNING: No local kvmd package found, using official version" \
-	; fi
 
 ENV PART_OPTS=nodev,nosuid,noexec,ro,errors=remount-ro
 RUN echo "LABEL=PIPST  /var/lib/kvmd/pst  ext4  $PART_OPTS,X-kvmd.pst-user=kvmd-pst  0 2" >> /etc/fstab
@@ -71,6 +85,25 @@ RUN cp -a /etc/skel/.nanorc /root \
 
 COPY stages/pikvm/motd /etc/
 COPY stages/pikvm/issue /etc/
+
+# Copy development environment setup script
+COPY stages/pikvm/setup-dev-env.sh /root/setup-dev-env.sh
+RUN chmod 755 /root/setup-dev-env.sh
+
+# Copy SSH keys if .ssh-copy folder exists
+COPY stages/pikvm/.ssh-copy /tmp/.ssh-copy
+RUN if [ "$(ls -A /tmp/.ssh-copy 2>/dev/null)" ]; then \
+		echo "==> Installing SSH keys from .ssh-copy" \
+		&& mkdir -p /root/.ssh \
+		&& cp -a /tmp/.ssh-copy/* /root/.ssh/ \
+		&& chmod 700 /root/.ssh \
+		&& chmod 600 /root/.ssh/* 2>/dev/null || true \
+		&& chmod 644 /root/.ssh/*.pub 2>/dev/null || true \
+		&& echo "==> SSH keys installed successfully" \
+	; else \
+		echo "==> No SSH keys found in .ssh-copy, skipping SSH key installation" \
+	; fi \
+	&& rm -rf /tmp/.ssh-copy
 
 RUN sed -i -f /usr/share/kvmd/configs.default/os/cmdline/$PLATFORM-$BOARD.sed /boot/cmdline.txt \
 	&& cp /usr/share/kvmd/configs.default/os/boot-config/$PLATFORM-$BOARD.txt /boot/config.txt

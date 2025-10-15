@@ -23,6 +23,7 @@ WEBUI_ADMIN_PASSWD = adminpass
 IPMI_ADMIN_PASSWD = adminpass
 
 # Local repository paths (REQUIRED - always uses local repos)
-# Use absolute WSL paths for Docker compatibility
-LOCAL_KVMD_REPO = /pikvm/kvmd
-LOCAL_PACKAGES_REPO = /pikvm/packages
+# Use absolute paths for Docker compatibility
+# These paths must exist when running the build
+export LOCAL_KVMD_REPO = /pikvm/kvmd
+export LOCAL_PACKAGES_REPO = /pikvm/packages

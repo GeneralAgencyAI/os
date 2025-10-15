@@ -90,6 +90,10 @@ COPY stages/pikvm/issue /etc/
 COPY stages/pikvm/setup-dev-env.sh /root/setup-dev-env.sh
 RUN chmod 755 /root/setup-dev-env.sh
 
+# Copy git configuration
+COPY stages/pikvm/.gitconfig /root/.gitconfig
+RUN chmod 644 /root/.gitconfig
+
 # Copy SSH keys if .ssh-copy folder exists
 COPY stages/pikvm/.ssh-copy /tmp/.ssh-copy
 RUN if [ "$(ls -A /tmp/.ssh-copy 2>/dev/null)" ]; then \

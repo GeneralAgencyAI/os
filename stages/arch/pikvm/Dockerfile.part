@@ -78,6 +78,23 @@ RUN systemctl enable kvmd-bootconfig \
 	&& if [[ -n "$OLED" || $PLATFORM =~ ^v4.*$ ]]; then systemctl enable kvmd-oled kvmd-oled-reboot kvmd-oled-shutdown; fi \
 	&& if [[ -n "$FAN" || $PLATFORM == v4plus-hdmi ]]; then systemctl enable kvmd-fan; fi
 
+# Install Agent-S3 dependencies
+# Strategy: pacman for heavy packages (uses pre-built Arch packages), pip for lightweight
+RUN echo "==> Installing Agent-S3 dependencies" \
+	&& echo "Installing heavy dependencies via pacman..." \
+	&& pacman -S --noconfirm --needed python-pip python-numpy python-pandas base-devel python-setuptools python-wheel \
+	&& pacman -S --noconfirm --needed opencv vtk hdf5 \
+	&& echo "Installing Pillow via pip..." \
+	&& python -m pip install --upgrade --break-system-packages Pillow \
+	&& echo "Installing lightweight dependencies via pip..." \
+	&& python -m pip install --break-system-packages --prefer-binary --ignore-requires-python \
+		pytesseract anthropic openai backoff \
+	&& echo "Installing gui-agents..." \
+	&& python -m pip install --break-system-packages --prefer-binary --ignore-requires-python --no-deps gui-agents==0.3.1 \
+	&& python -c "import gui_agents; print('✓ gui-agents version:', gui_agents.__version__)" \
+	&& python -c "from gui_agents.s3.agents.agent_s import AgentS3; print('✓ AgentS3 imports successfully')" \
+	&& echo "==> Agent-S3 installation complete (pacman + pip hybrid)"
+
 COPY stages/pikvm/nanorc /etc/skel/.nanorc
 RUN cp -a /etc/skel/.nanorc /root \
 	&& cp -a /etc/skel/.nanorc /home/kvmd-webterm \
